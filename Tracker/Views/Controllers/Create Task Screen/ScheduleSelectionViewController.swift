@@ -7,12 +7,12 @@
 
 import UIKit
 
-class ScheduleSelectionViewController: UIViewController {
+final class ScheduleSelectionViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     // MARK: - Properties
     
     var setSchedule: (([Weekdays]) -> Void)?
-    var selectedDays: [Weekdays] = []
+    private let viewModel: CreateTaskViewModel
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
@@ -21,14 +21,16 @@ class ScheduleSelectionViewController: UIViewController {
         return label
     }()
     
-    private lazy var scheduleStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 2
-        stackView.distribution = .fillEqually
-        stackView.clipsToBounds = true
-        stackView.layer.cornerRadius = 10
-        return stackView
+    private lazy var scheduleTableView: UITableView = {
+        let tableView = UITableView()
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.clipsToBounds = true
+        tableView.layer.cornerRadius = 16
+        tableView.separatorColor = .ccGray
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.register(ScheduleSelectionCell.self, forCellReuseIdentifier: ScheduleSelectionCell.reuseIdentifier)
+        return tableView
     }()
     
     private lazy var setScheduleButton: UIButton = {
@@ -42,6 +44,17 @@ class ScheduleSelectionViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Initialization
+    
+    init(viewModel: CreateTaskViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
@@ -49,13 +62,12 @@ class ScheduleSelectionViewController: UIViewController {
         view.backgroundColor = .white
         configureUI()
         configureConstraints()
-        configureStackView()
     }
     
     // MARK: - UI Setup
     
     private func configureUI() {
-        [titleViewController, scheduleStackView, setScheduleButton].forEach {
+        [titleViewController, scheduleTableView, setScheduleButton].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -69,11 +81,10 @@ class ScheduleSelectionViewController: UIViewController {
             titleViewController.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleViewController.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 35),
             
-            scheduleStackView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 15),
-            scheduleStackView.bottomAnchor.constraint(equalTo: setScheduleButton.topAnchor, constant: -47),
-            scheduleStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            scheduleStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            
+            scheduleTableView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 15),
+            scheduleTableView.bottomAnchor.constraint(equalTo: setScheduleButton.topAnchor),
+            scheduleTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            scheduleTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             
             setScheduleButton.heightAnchor.constraint(equalToConstant: 60),
             setScheduleButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -83,60 +94,34 @@ class ScheduleSelectionViewController: UIViewController {
         ])
     }
     
-    // MARK: - Constraints
+    // MARK: - UITableViewDataSource
     
-    private func configureStackView() {
-        for day in Weekdays.allCases {
-            let container = createSheduleContainer(for: day.rawValue)
-            scheduleStackView.addArrangedSubview(container)
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return Weekdays.allCases.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleSelectionCell.reuseIdentifier, for: indexPath) as? ScheduleSelectionCell else {
+            return UITableViewCell()
         }
+        cell.renderCell(with: Weekdays.allCases[indexPath.row].rawValue, tag: indexPath.row)
+        
+        cell.didChangeSwitchState = { [weak self] (isOn, dayIndex) in
+            guard let self else { return }
+            self.viewModel.updateSelectedSchedule(switchState: isOn, day: dayIndex)
+            self.updateSetScheduleButtonState()
+        }
+        
+        return cell
+    }
+    
+    // MARK: - UITableViewDelegate
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
     }
     
     // MARK: - Private Helper Methods
-    
-    private func createSheduleContainer(for day: String) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .ccLightGray
-        
-        let dayLabel = UILabel()
-        dayLabel.text = day
-        dayLabel.font = .systemFont(ofSize: 16)
-        dayLabel.textColor = .black
-        dayLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        let daySwitch = UISwitch()
-        daySwitch.tag = Weekdays.allCases.firstIndex { $0.rawValue == day } ?? 0
-        daySwitch.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
-        daySwitch.translatesAutoresizingMaskIntoConstraints = false
-        daySwitch.onTintColor = .blue
-        
-        container.addSubview(dayLabel)
-        container.addSubview(daySwitch)
-        
-        NSLayoutConstraint.activate([
-            dayLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            dayLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            
-            daySwitch.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            daySwitch.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16)
-        ])
-        
-        return container
-    }
-    
-    private func sortDaysOfWeek(_ days: [Weekdays]) -> [Weekdays] {
-        let dayOrder: [String: Int] = [
-            Weekdays.monday.rawValue: 0,
-            Weekdays.tuesday.rawValue: 1,
-            Weekdays.wednesday.rawValue: 2,
-            Weekdays.thursday.rawValue: 3,
-            Weekdays.friday.rawValue: 4,
-            Weekdays.saturday.rawValue: 5,
-            Weekdays.sunday.rawValue: 6]
-        return days.sorted {
-            (dayOrder[$0.rawValue] ?? 6) < (dayOrder[$1.rawValue] ?? 6)
-        }
-    }
     
     private func updateSetScheduleButtonState() {
         setScheduleButton.isEnabled = isButtonCanBeActive()
@@ -144,28 +129,13 @@ class ScheduleSelectionViewController: UIViewController {
     }
     
     private func isButtonCanBeActive() -> Bool {
-        return selectedDays.isEmpty ? false : true
+        return viewModel.selectedDaysInSchedule.isEmpty ? false : true
     }
     
     // MARK: - Actions
     
-    @objc private func switchChanged(_ sender: UISwitch) {
-        let day = Weekdays.allCases[sender.tag]
-        
-        if sender.isOn {
-            selectedDays.append(day)
-            updateSetScheduleButtonState()
-        } else {
-            if let index = selectedDays.firstIndex(of: day) {
-                selectedDays.remove(at: index)
-                updateSetScheduleButtonState()
-            }
-        }
-    }
-    
     @objc private func saveSelectedDays() {
-        let sortedDays = sortDaysOfWeek(selectedDays)
-        setSchedule?(sortedDays)
+        setSchedule?(viewModel.selectedDaysInSchedule)
         dismiss(animated: true, completion: nil)
     }
 }

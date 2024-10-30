@@ -21,6 +21,7 @@ final class CreateTaskViewModel {
     
     var taskType: TaskType
     var taskSchedule: [Weekdays]?
+    var selectedDaysInSchedule: [Weekdays] = []
     var taskName: String = "Без названия" {
         didSet {
             onTaskNameChanged?(taskName)
@@ -106,9 +107,21 @@ final class CreateTaskViewModel {
         case 7:
             return "Каждый день"
         case 5...6:
-            return "Каждый день, кроме \(cutTheDay(days: missingDays))"
+            return "Каждый день, кроме \(cutTheDay(days: sortDaysOfWeek(missingDays)))"
         default:
-            return cutTheDay(days: weekdays)
+            return cutTheDay(days: sortDaysOfWeek(weekdays))
+        }
+    }
+    
+    func updateSelectedSchedule(switchState isOn: Bool, day dayIndex: Int) {
+        let day = Weekdays.allCases[dayIndex]
+        
+        if isOn {
+            selectedDaysInSchedule.append(day)
+        } else {
+            if let index = selectedDaysInSchedule.firstIndex(of: day) {
+                selectedDaysInSchedule.remove(at: index)
+            }
         }
     }
     
@@ -143,5 +156,19 @@ final class CreateTaskViewModel {
         dateFormatter.locale = Locale(identifier: "ru_RU")
         let dayString = dateFormatter.string(from: date).capitalized
         return Weekdays(rawValue: dayString)!
+    }
+    
+    private func sortDaysOfWeek(_ days: [Weekdays]) -> [Weekdays] {
+        let dayOrder: [String: Int] = [
+            Weekdays.monday.rawValue: 0,
+            Weekdays.tuesday.rawValue: 1,
+            Weekdays.wednesday.rawValue: 2,
+            Weekdays.thursday.rawValue: 3,
+            Weekdays.friday.rawValue: 4,
+            Weekdays.saturday.rawValue: 5,
+            Weekdays.sunday.rawValue: 6]
+        return days.sorted {
+            (dayOrder[$0.rawValue] ?? 6) < (dayOrder[$1.rawValue] ?? 6)
+        }
     }
 }

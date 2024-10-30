@@ -9,7 +9,8 @@ import UIKit
 
 class CreateTaskViewController: UIViewController,
                                 UITextFieldDelegate,
-                                UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
+                                UICollectionViewDelegateFlowLayout, UICollectionViewDataSource,
+                                UITableViewDelegate, UITableViewDataSource {
     
     // MARK: - Properties
     
@@ -59,14 +60,17 @@ class CreateTaskViewController: UIViewController,
         return collectionViewLayout
     }()
     
-    private lazy var selectionStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 2
-        stackView.distribution = .fillEqually
-        stackView.layer.cornerRadius = 16
-        stackView.clipsToBounds = true
-        return stackView
+    private lazy var selectionTableView: UITableView = {
+        let tableView = UITableView()
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.clipsToBounds = true
+        tableView.layer.cornerRadius = 16
+        tableView.separatorColor = .ccGray
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.isScrollEnabled = false
+        tableView.register(SettingTaskSelectionCell.self, forCellReuseIdentifier: SettingTaskSelectionCell.reuseIdentifier)
+        return tableView
     }()
     
     private lazy var collectionView: UICollectionView = {
@@ -132,24 +136,12 @@ class CreateTaskViewController: UIViewController,
         view.backgroundColor = .white
         
         [titleViewController, taskNameField, taskNameLengthWarning,
-         selectionStackView, collectionView, stackViewButtons].forEach {
+         selectionTableView, collectionView, stackViewButtons].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
-        configureStackView()
         titleViewController.text = viewModel.taskType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
         collectionView.layoutIfNeeded()
-    }
-    
-    private func configureStackView() {
-        let titles = viewModel.taskType == .irregularEvent ?
-        viewModel.selectionButtonTitles.dropLast() :
-        viewModel.selectionButtonTitles
-        
-        for (index, title) in titles.enumerated() {
-            let container = createSelectionContainer(with: title, tag: index)
-            selectionStackView.addArrangedSubview(container)
-        }
     }
     
     // MARK: - Constraints
@@ -169,11 +161,11 @@ class CreateTaskViewController: UIViewController,
             taskNameLengthWarning.leadingAnchor.constraint(equalTo: taskNameField.leadingAnchor),
             taskNameLengthWarning.trailingAnchor.constraint(equalTo: taskNameField.trailingAnchor),
             
-            selectionStackView.topAnchor.constraint(equalTo: taskNameLengthWarning.bottomAnchor, constant: 32),
-            selectionStackView.leadingAnchor.constraint(equalTo: taskNameField.leadingAnchor),
-            selectionStackView.trailingAnchor.constraint(equalTo: taskNameField.trailingAnchor),
+            selectionTableView.topAnchor.constraint(equalTo: taskNameLengthWarning.bottomAnchor, constant: 32),
+            selectionTableView.leadingAnchor.constraint(equalTo: taskNameField.leadingAnchor),
+            selectionTableView.trailingAnchor.constraint(equalTo: taskNameField.trailingAnchor),
             
-            collectionView.topAnchor.constraint(equalTo: selectionStackView.bottomAnchor, constant: 20),
+            collectionView.topAnchor.constraint(equalTo: selectionTableView.bottomAnchor, constant: 20),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: stackViewButtons.topAnchor, constant: -16),
@@ -183,6 +175,11 @@ class CreateTaskViewController: UIViewController,
             stackViewButtons.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             stackViewButtons.heightAnchor.constraint(equalToConstant: 60)
         ])
+        
+        let rowHeight: CGFloat = 75
+        let numberOfRows = CGFloat(getNumberOfRowsInSection())
+        selectionTableView.heightAnchor.constraint(equalToConstant: numberOfRows * rowHeight).isActive = true
+        
         warningLabelHeightConstraint = taskNameLengthWarning.heightAnchor.constraint(equalToConstant: 0)
         warningLabelHeightConstraint?.isActive = true
     }
@@ -194,6 +191,57 @@ class CreateTaskViewController: UIViewController,
         let newText = (currentText as NSString).replacingCharacters(in: range, with: string)
         viewModel.updateWarningMessage(for: newText, limit: textFieldMaxCharacterLimit)
         return newText.count <= textFieldMaxCharacterLimit
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    // MARK: - UITTableViewDelegate
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return getNumberOfRowsInSection()
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingTaskSelectionCell.reuseIdentifier, for: indexPath) as? SettingTaskSelectionCell else {
+            return UITableViewCell()
+        }
+        
+        cell.renderCell(title: viewModel.selectionButtonTitles[indexPath.row], description: viewModel.selectionDescription ?? "")
+        
+        viewModel.onSelectionDescriptionChanged = { [weak self] newDescription in
+            guard let self = self else { return }
+            cell.renderCell(title: viewModel.selectionButtonTitles[indexPath.row], description: viewModel.selectionDescription ?? "")
+        }
+        
+        return cell
+    }
+    
+    // MARK: - UITableViewDelegate
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        
+        if indexPath.row == 0 {
+            present(CategorySelectionViewController(), animated: true)
+        } else {
+            let setSheduleVC = ScheduleSelectionViewController(viewModel: CreateTaskViewModel(taskType: viewModel.taskType))
+            present(setSheduleVC, animated: true)
+            
+            setSheduleVC.setSchedule = { [weak self] someDays in
+                guard let self else { return }
+                self.viewModel.taskSchedule = someDays
+                let description = "\(self.viewModel.convertWeekdays(weekdays: someDays))"
+                self.viewModel.selectionDescription = description
+                self.updateCreateTaskButtonstate()
+            }
+        }
     }
     
     // MARK: - UICollectionViewDataSource
@@ -336,67 +384,11 @@ class CreateTaskViewController: UIViewController,
         buttonCreateTask.backgroundColor = viewModel.isCreateButtonEnabled() ? .ccBlack : .ccGray
     }
     
-    private func createSelectionContainer(with title: String, tag index: Int) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .ccLightGray
-        
-        let selectionButtonTitle = UILabel()
-        selectionButtonTitle.configureLabel(font: .systemFont(ofSize: 17), textColor: .ccBlack, aligment: nil)
-        selectionButtonTitle.text = title
-        
-        let selectionButtonDescription = UILabel()
-        selectionButtonDescription.configureLabel(font: .systemFont(ofSize: 17), textColor: .ccGray, aligment: nil)
-        
-        let detailDisclosure = UIButton(type: .system)
-        let chevonImage = UIImage(systemName: "chevron.right")
-        detailDisclosure.setImage(chevonImage, for: .normal)
-        detailDisclosure.tintColor = .ccGray
-        detailDisclosure.tag = index
-        detailDisclosure.addTarget(self, action: #selector(detailDisclosureTapped), for: .touchUpInside)
-        
-        [selectionButtonTitle, selectionButtonDescription, detailDisclosure].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            container.addSubview($0)
-        }
-        
-        NSLayoutConstraint.activate([
-            selectionButtonTitle.topAnchor.constraint(equalTo: container.topAnchor, constant: 15),
-            selectionButtonTitle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            
-            selectionButtonDescription.topAnchor.constraint(equalTo: selectionButtonTitle.bottomAnchor, constant: -2),
-            selectionButtonDescription.leadingAnchor.constraint(equalTo: selectionButtonTitle.leadingAnchor),
-            selectionButtonDescription.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -14),
-            
-            detailDisclosure.topAnchor.constraint(equalTo: container.topAnchor, constant: 26),
-            detailDisclosure.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -26),
-            detailDisclosure.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16)
-        ])
-        
-        viewModel.onSelectionDescriptionChanged = { [weak selectionButtonDescription] text in
-            selectionButtonDescription?.text = text
-        }
-        
-        return container
+    private func getNumberOfRowsInSection() -> Int {
+        return viewModel.taskType == .habit ? viewModel.selectionButtonTitles.count : viewModel.selectionButtonTitles.dropLast().count
     }
     
     //MARK: - Actions
-    
-    @objc private func detailDisclosureTapped(_ sender: UIButton) {
-        if sender.tag == 0 {
-            present(CategorySelectionViewController(), animated: true)
-        } else {
-            let setSheduleVC = ScheduleSelectionViewController()
-            present(setSheduleVC, animated: true)
-            
-            setSheduleVC.setSchedule = { [weak self] someDays in
-                guard let self else { return }
-                self.viewModel.taskSchedule = someDays
-                let description = "\(self.viewModel.convertWeekdays(weekdays: someDays))"
-                self.viewModel.selectionDescription = description
-                self.updateCreateTaskButtonstate()
-            }
-        }
-    }
     
     @objc private func createTask() {
         if let newTask = viewModel.createTask() {
