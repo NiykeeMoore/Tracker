@@ -7,14 +7,14 @@
 
 import UIKit
 
-class TaskCell: UICollectionViewCell {
+final class TaskCell: UICollectionViewCell {
     
     //MARK: - Properties
-    let viewModel = TaskListViewModel()
     
     static let reuseIdentifier = "Tracker Cell"
-    
     var onCompleteTaskButtonTapped: (() -> Void)?
+    
+    private let viewModel = TaskListViewModel()
     
     private lazy var themeColorContainer: UIView = {
         let item = UIView()
@@ -107,7 +107,7 @@ class TaskCell: UICollectionViewCell {
     
     // MARK: - Public Helper Methods
     
-    func configure(with model: Task?) {
+    func configure(with model: Tracker?) {
         guard let model else { return }
         titleTracker.text = model.name
         emoji.text = model.emoji

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class StatisticViewController: UIViewController {
+final class StatisticViewController: UIViewController {
     
     //MARK: - Properties
     

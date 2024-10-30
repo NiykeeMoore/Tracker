@@ -5,10 +5,9 @@
 //  Created by Niykee Moore on 16.10.2024.
 //
 
-
 import UIKit
 
-class ColorCell: UICollectionViewCell {
+final class ColorCell: UICollectionViewCell {
     
     // MARK: - Properties
     

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SectionHeaderCollectionView: UICollectionReusableView {
+final class SectionHeaderCollectionView: UICollectionReusableView {
     
     //MARK: - Properties
     

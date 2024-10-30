@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TaskCategory {
+struct TrackerCategory {
     let title: String
-    var tasks: [Task]
+    let tasks: [Tracker]
 }

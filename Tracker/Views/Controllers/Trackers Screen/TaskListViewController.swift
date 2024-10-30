@@ -12,6 +12,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     //MARK: - Properties
     
     private let viewModel: TaskListViewModel
+    private var categories: [TrackerCategory] = []
+    private var currentDate: Date
     
     private lazy var taskDatePicker: UIDatePicker = {
         let datePicker = UIDatePicker()
@@ -66,13 +68,22 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     
     init(viewModel: TaskListViewModel) {
         self.viewModel = viewModel
+        self.currentDate = viewModel.currentDate
         super.init(nibName: nil, bundle: nil)
+        setupBindings()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private func setupBindings() {
+        viewModel.onCategoriesUpdated = { [weak self] updatedCategories in
+            guard let self else { return }
+            self.categories = updatedCategories
+            self.collectionView.reloadData()
+        }
+    }
     // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {

@@ -7,17 +7,17 @@
 
 import UIKit
 
-class CreateTaskViewController: UIViewController,
-                                UITextFieldDelegate,
-                                UICollectionViewDelegateFlowLayout, UICollectionViewDataSource,
-                                UITableViewDelegate, UITableViewDataSource {
+final class CreateTaskViewController: UIViewController,
+                                      UITextFieldDelegate,
+                                      UICollectionViewDelegateFlowLayout, UICollectionViewDataSource,
+                                      UITableViewDelegate, UITableViewDataSource {
     
     // MARK: - Properties
     
-    private let viewModel: CreateTaskViewModel
-    
-    var onTaskCreated: ((String, Task) -> Void)?
+    var onTaskCreated: ((String, Tracker) -> Void)?
     var onClose: (() -> Void)?
+    
+    private let viewModel: CreateTaskViewModel
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()

@@ -7,12 +7,12 @@
 
 import UIKit
 
-class TypeSelectionViewController: UIViewController {
+final class TypeSelectionViewController: UIViewController {
     
     // MARK: - Properties
     
     var onClose: (() -> Void)?
-    var onTaskCreated: ((String, Task) -> Void)?
+    var onTaskCreated: ((String, Tracker) -> Void)?
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()

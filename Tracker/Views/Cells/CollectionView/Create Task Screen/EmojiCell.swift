@@ -7,7 +7,7 @@
 
 import UIKit
 
-class EmojiCell: UICollectionViewCell {
+final class EmojiCell: UICollectionViewCell {
     
     //MARK: - Properties
     

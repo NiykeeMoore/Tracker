@@ -39,6 +39,11 @@ final class CreateTaskViewModel {
         .r2C1LightPink, .r2C2LightBlue, .r2C3LightGreen,   .r2C4DarkPurple,  .r2C5DarkOrange, .r2C6Pink,
         .r3C1Sandy,     .r3C2Сornflower,.r3C3Purple,       .r3C4DarkPink,    .r3C5ApsidBlue,  .r3C6LimeGreen
     ]
+    var onTaskCreated: ((Tracker) -> Void)?
+    var onSectionsUpdated: (() -> Void)?
+    var onTaskNameChanged: ((String?) -> Void)?
+    var onWarningMessageChanged: ((String?) -> Void)?
+    var onSelectionDescriptionChanged: ((String?) -> Void)?
     
     private(set) var warningMessage: String? {
         didSet {
@@ -48,12 +53,6 @@ final class CreateTaskViewModel {
     private var currentDate: Date {
         return Date()
     }
-    
-    var onTaskCreated: ((Task) -> Void)?
-    var onSectionsUpdated: (() -> Void)?
-    var onTaskNameChanged: ((String?) -> Void)?
-    var onWarningMessageChanged: ((String?) -> Void)?
-    var onSelectionDescriptionChanged: ((String?) -> Void)?
     
     // MARK: - Initialization
     
@@ -75,16 +74,15 @@ final class CreateTaskViewModel {
         return taskSchedule
     }
     
-    func createTask() -> Task? {
+    func createTask() -> Tracker? {
         guard isReadyToCreateTask() else { return nil }
         
-        return Task(id: UUID(),
+        return Tracker(id: UUID(),
                     name: taskName,
-                    taskType: taskType,
                     color: colorsInSection[selectedColorIndex!],
                     emoji: emojisInSection[selectedEmojiIndex!],
-                    schedule: getTaskSchedule(),
-                    creationDate: Date())
+                    schedule: getTaskSchedule()
+        )
     }
     
     func isCreateButtonEnabled() -> Bool {

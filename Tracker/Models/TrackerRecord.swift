@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TasksCompleted {
+struct TrackerRecord {
     let id: UUID
     let dueDate: Date
 }
