@@ -47,7 +47,7 @@ class TaskCell: UICollectionViewCell {
     
     private lazy var dayCountLabel: UILabel = {
         let item = UILabel()
-        item.configureLabel(font: .systemFont(ofSize: 17), textColor: .ccBlack, aligment: nil)
+        item.configureLabel(font: .systemFont(ofSize: 12), textColor: .ccBlack, aligment: nil)
         return item
     }()
     
@@ -121,7 +121,11 @@ class TaskCell: UICollectionViewCell {
     }
     
     func updateDayCountLabel(with count: Int) {
-        dayCountLabel.text = "Дней \(count)"
+        switch count {
+        case 1: dayCountLabel.text = "\(count) день"
+        case 2...4: dayCountLabel.text = "\(count) дня"
+        default: dayCountLabel.text = "\(count) дней"
+        }
     }
     
     // MARK: - Actions

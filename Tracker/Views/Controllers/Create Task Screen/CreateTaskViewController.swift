@@ -346,7 +346,6 @@ class CreateTaskViewController: UIViewController,
         
         let selectionButtonDescription = UILabel()
         selectionButtonDescription.configureLabel(font: .systemFont(ofSize: 17), textColor: .ccGray, aligment: nil)
-        selectionButtonDescription.text = "Необходимо выбрать значение"
         
         let detailDisclosure = UIButton(type: .system)
         let chevonImage = UIImage(systemName: "chevron.right")

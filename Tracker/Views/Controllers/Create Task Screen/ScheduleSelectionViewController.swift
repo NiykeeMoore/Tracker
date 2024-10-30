@@ -108,6 +108,7 @@ class ScheduleSelectionViewController: UIViewController {
         daySwitch.tag = Weekdays.allCases.firstIndex { $0.rawValue == day } ?? 0
         daySwitch.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
         daySwitch.translatesAutoresizingMaskIntoConstraints = false
+        daySwitch.onTintColor = .blue
         
         container.addSubview(dayLabel)
         container.addSubview(daySwitch)

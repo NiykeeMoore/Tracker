@@ -23,6 +23,7 @@ extension UINavigationController {
         appearance.configureWithOpaqueBackground()
         
         appearance.backgroundColor = .white
+        appearance.shadowColor = .clear
         
         appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor : cTitle]
         

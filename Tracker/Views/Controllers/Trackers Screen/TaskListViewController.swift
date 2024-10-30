@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class TaskListViewController: UIViewController,
+final class TaskListViewController: UIViewController, UISearchBarDelegate,
                                     UICollectionViewDelegateFlowLayout, UICollectionViewDataSource  {
     //MARK: - Properties
     
@@ -91,7 +91,7 @@ final class TaskListViewController: UIViewController,
                                                            style: .done,
                                                            target: self,
                                                            action: #selector (buttonCreateTracker))
-        
+        navigationItem.searchController = searchController
         [taskDatePicker, collectionView, placeholderImage, placeholderLabel].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -126,6 +126,7 @@ final class TaskListViewController: UIViewController,
     // MARK: - Search Bar Configuration
     
     private func configureSearchBar() {
+        searchController.searchBar.delegate = self
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.searchBar.searchTextField.leftView?.tintColor = .ccBlack
@@ -135,7 +136,6 @@ final class TaskListViewController: UIViewController,
             string: "Поиск",
             attributes: [NSAttributedString.Key.foregroundColor: UIColor.ccBlack]
         )
-        navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always

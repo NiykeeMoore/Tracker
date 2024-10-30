@@ -29,6 +29,14 @@ class TypeSelectionViewController: UIViewController {
         return configureCategoryButton(withTitle: "Нерегулярное событие", selector: #selector(setIrregularEventCategory))
     }()
     
+    private lazy var selectionStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        stackView.distribution = .fillEqually
+        return stackView
+    }()
+    
     // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
@@ -41,10 +49,12 @@ class TypeSelectionViewController: UIViewController {
     
     private func configureUI() {
         view.backgroundColor = .white
-        [titleViewController, habitButton, irregularEventButton].forEach {
+        [titleViewController, selectionStackView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
+        selectionStackView.addArrangedSubview(habitButton)
+        selectionStackView.addArrangedSubview(irregularEventButton)
     }
     
     // MARK: - Constraints
@@ -52,27 +62,19 @@ class TypeSelectionViewController: UIViewController {
     private func configureConstraints() {
         NSLayoutConstraint.activate([
             titleViewController.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleViewController.topAnchor.constraint(equalTo: view.topAnchor, constant: 35)
+            titleViewController.topAnchor.constraint(equalTo: view.topAnchor, constant: 35),
+            
+            selectionStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            selectionStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            selectionStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            selectionStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            habitButton.heightAnchor.constraint(equalToConstant: 60),
+            irregularEventButton.heightAnchor.constraint(equalToConstant: 60)
         ])
-        setButtonConstraints(habitButton, topAnchor: view.centerYAnchor)
-        setButtonConstraints(irregularEventButton, topAnchor: habitButton.bottomAnchor)
     }
     
     // MARK: - Private Helper Methods
-    
-    private func setButtonConstraints(_ button: UIButton, topAnchor: NSLayoutYAxisAnchor?) {
-        var constraints = [
-            button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            button.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            button.heightAnchor.constraint(equalToConstant: 60)
-        ]
-        
-        if let topAnchor = topAnchor {
-            constraints.append(button.topAnchor.constraint(equalTo: topAnchor, constant: 16))
-        }
-        NSLayoutConstraint.activate(constraints)
-    }
     
     private func configureCategoryButton(withTitle title: String, selector: Selector) -> UIButton {
         let button = UIButton()
