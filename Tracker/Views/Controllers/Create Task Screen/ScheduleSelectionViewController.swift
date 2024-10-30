@@ -13,6 +13,8 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
     
     var setSchedule: (([Weekdays]) -> Void)?
     private let viewModel: CreateTaskViewModel
+    private let rowHeight: CGFloat = 75
+    private let numberOfRows: Int = Weekdays.allCases.count
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
@@ -82,29 +84,36 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
             titleViewController.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 35),
             
             scheduleTableView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 15),
-            scheduleTableView.bottomAnchor.constraint(equalTo: setScheduleButton.topAnchor),
             scheduleTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             scheduleTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             
             setScheduleButton.heightAnchor.constraint(equalToConstant: 60),
             setScheduleButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            setScheduleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            setScheduleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            setScheduleButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            setScheduleButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             setScheduleButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -15),
         ])
+        
+        scheduleTableView.heightAnchor.constraint(equalToConstant: CGFloat(numberOfRows) * rowHeight).isActive = true
     }
     
     // MARK: - UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return Weekdays.allCases.count
+        return numberOfRows
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleSelectionCell.reuseIdentifier, for: indexPath) as? ScheduleSelectionCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleSelectionCell.reuseIdentifier,
+                                                       for: indexPath) as? ScheduleSelectionCell else {
             return UITableViewCell()
         }
+        
         cell.renderCell(with: Weekdays.allCases[indexPath.row].rawValue, tag: indexPath.row)
+        
+        if indexPath.row == numberOfRows - 1 {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        }
         
         cell.didChangeSwitchState = { [weak self] (isOn, dayIndex) in
             guard let self else { return }
@@ -118,7 +127,11 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
     // MARK: - UITableViewDelegate
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 75
+        return rowHeight
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
     }
     
     // MARK: - Private Helper Methods

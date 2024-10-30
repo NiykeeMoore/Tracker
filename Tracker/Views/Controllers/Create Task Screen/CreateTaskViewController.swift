@@ -205,11 +205,16 @@ final class CreateTaskViewController: UIViewController,
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingTaskSelectionCell.reuseIdentifier, for: indexPath) as? SettingTaskSelectionCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingTaskSelectionCell.reuseIdentifier,
+                                                       for: indexPath) as? SettingTaskSelectionCell else {
             return UITableViewCell()
         }
         
         cell.renderCell(title: viewModel.selectionButtonTitles[indexPath.row], description: viewModel.selectionDescription ?? "")
+        
+        if indexPath.row == getNumberOfRowsInSection() - 1 {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        }
         
         viewModel.onSelectionDescriptionChanged = { [weak self] newDescription in
             guard let self = self else { return }

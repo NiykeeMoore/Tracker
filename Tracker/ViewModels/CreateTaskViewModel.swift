@@ -75,12 +75,14 @@ final class CreateTaskViewModel {
     }
     
     func createTask() -> Tracker? {
-        guard isReadyToCreateTask() else { return nil }
+        guard isReadyToCreateTask(),
+              let selectedColorIndex = selectedColorIndex,
+              let selectedEmojiIndex = selectedEmojiIndex else { return nil }
         
         return Tracker(id: UUID(),
                     name: taskName,
-                    color: colorsInSection[selectedColorIndex!],
-                    emoji: emojisInSection[selectedEmojiIndex!],
+                    color: colorsInSection[selectedColorIndex],
+                    emoji: emojisInSection[selectedEmojiIndex],
                     schedule: getTaskSchedule()
         )
     }
