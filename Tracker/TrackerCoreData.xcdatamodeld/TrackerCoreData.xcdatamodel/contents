@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24C5073e" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CDTracker" representedClassName="CDTracker" syncable="YES">
+        <attribute name="color" attributeType="String" valueTransformerName="UIColorValueTransformer"/>
+        <attribute name="emoji" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="schedule" optional="YES" attributeType="Transformable" valueTransformerName="DaysValueTransformer"/>
+        <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDTrackerCategory" inverseName="tracker" inverseEntity="CDTrackerCategory"/>
+        <relationship name="completed" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDTrackerRecord" inverseName="tracker" inverseEntity="CDTrackerRecord"/>
+    </entity>
+    <entity name="CDTrackerCategory" representedClassName="CDTrackerCategory" syncable="YES">
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="tracker" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDTracker" inverseName="category" inverseEntity="CDTracker"/>
+    </entity>
+    <entity name="CDTrackerRecord" representedClassName="CDTrackerRecord" syncable="YES">
+        <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="tracker" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDTracker" inverseName="completed" inverseEntity="CDTracker"/>
+    </entity>
+</model>
