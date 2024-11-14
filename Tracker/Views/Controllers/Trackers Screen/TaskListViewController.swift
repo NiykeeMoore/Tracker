@@ -84,6 +84,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         viewModel.onDataGetChanged = { [weak self] in
             DispatchQueue.main.async {
                 self?.collectionView.reloadData()
+                print("onDataGetChanged")
             }
         }
     }
@@ -177,10 +178,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             
             let updatedCount = self.viewModel.completedDaysCount(for: task.id)
             cell.updateDayCountLabel(with: updatedCount)
-            
-            if let indexPath = collectionView.indexPath(for: cell) {
-                self.collectionView.reloadItems(at: [indexPath])
-            }
         }
         
         cell.onCompleteTaskButtonTapped = { [weak self] in
@@ -190,14 +187,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             
             let updatedCount = self.viewModel.completedDaysCount(for: task.id)
             cell.updateDayCountLabel(with: updatedCount)
-            
-            if let indexPath = collectionView.indexPath(for: cell) {
-                let updatedCount = self.viewModel.completedDaysCount(for: task.id)
-                cell.updateDayCountLabel(with: updatedCount)
-                self.collectionView.reloadItems(at: [indexPath])
-            }
         }
-        
+        print("cellForItem -> \(cell)")
         return cell
     }
     
@@ -237,6 +228,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             placeholderImage.isHidden = true
             placeholderLabel.isHidden = true
         }
+        collectionView.reloadData()
     }
     
     // MARK: - Actions
@@ -244,7 +236,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     @objc private func buttonCreateTracker() {
         let typeSelectionVC = TypeSelectionViewController()
         
-        typeSelectionVC.onTaskCreated = { [weak self] (category, newTask) in
+        typeSelectionVC.onTaskCreated = { [weak self] in
             guard let self else { return }
             self.activePlaceholderImage(isActive: self.viewModel.fetchTasksForDate(viewModel.selectedDay).isEmpty)
         }

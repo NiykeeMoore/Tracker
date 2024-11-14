@@ -60,9 +60,7 @@ final class TaskListViewModel {
     }
     
     func isTaskCompleted(for task: Tracker, on date: Date) -> Bool {
-        return trackerRecordStore.fetchAllRecords().contains {
-            $0.id == task.id && Calendar.current.isDate($0.dueDate, inSameDayAs: date)
-        }
+        return trackerRecordStore.isTaskComplete(for: task, on: date)
     }
     
     func toggleCompletionStatus(_ task: Tracker, on date: Date) {
@@ -75,11 +73,11 @@ final class TaskListViewModel {
     }
     
     func completedDaysCount(for taskId: UUID) -> Int {
-        return trackerRecordStore.fetchedResultsController?.fetchedObjects?.filter { $0.tracker?.id == taskId }.count ?? 0
+        return trackerRecordStore.countCompletedDays(for: taskId)
     }
     
     func numberOfItems(in section: Int) -> Int {
-        return fetchTasksForDate(selectedDay).count
+        return fetchTasksForDate(selectedDay.onlyDate).count
     }
     
     func numberOfSections() -> Int {

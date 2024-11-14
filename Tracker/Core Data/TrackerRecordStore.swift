@@ -12,10 +12,10 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Properties
     
-    var fetchedResultsController: NSFetchedResultsController<CDTrackerRecord>?
     var onRecordsUpdated: (() -> Void)?
     
     private let coreData = CoreDataManager.shared
+    private var fetchedResultsController: NSFetchedResultsController<CDTrackerRecord>?
     private let trackerStore = TrackerStore()
     private let managedObjectContext: NSManagedObjectContext
     
@@ -29,23 +29,9 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Setup FetchedResultsControllerDelegate
     
-    func setupFetchedResultsController(for trackerID: UUID? = nil, isCompleted: Bool? = nil) {
+    private func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<CDTrackerRecord> = CDTrackerRecord.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dueDate", ascending: true)]
-        
-        var predicates: [NSPredicate] = []
-        
-        if let trackerID = trackerID {
-            predicates.append(NSPredicate(format: "tracker.id == %@", trackerID as CVarArg))
-        }
-        
-        if let isCompleted = isCompleted {
-            predicates.append(NSPredicate(format: "isCompleted == %@", NSNumber(value: isCompleted)))
-        }
-        
-        if !predicates.isEmpty {
-            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        }
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
         
         fetchedResultsController = NSFetchedResultsController(
             fetchRequest: fetchRequest,
@@ -66,12 +52,10 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     // MARK: - Public Helper Methods
     
     func addRecordForTracker(for tracker: Tracker, on date: Date) {
-        guard let cdTracker = trackerStore.convertToCDObject(from: tracker) else { return }
-        
-        let fetchRequest: NSFetchRequest<CDTrackerRecord> = CDTrackerRecord.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "tracker == %@ AND dueDate == %@", cdTracker, date as NSDate)
-        
-        if let existingRecord = try? coreData.context.fetch(fetchRequest), !existingRecord.isEmpty { return }
+        guard let cdTracker = convertToCDObject(from: tracker) else {
+            print("Ошибка: не удалось конвертировать трекер в CD объект")
+            return
+        }
         
         let record = CDTrackerRecord(context: coreData.context)
         record.id = UUID()
@@ -82,22 +66,19 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func removeRecordForTracker(for tracker: Tracker, on date: Date) {
-        guard let cdTracker = trackerStore.convertToCDObject(from: tracker) else { return }
-        let fetchRequest: NSFetchRequest<CDTrackerRecord> = CDTrackerRecord.fetchRequest()
+        guard let cdTracker = convertToCDObject(from: tracker) else { return }
+        guard let fetchedRecords = fetchedResultsController?.fetchedObjects else { return }
         
-        let startOfDay = Calendar.current.startOfDay(for: date)
-        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)
+        let filteredRecords = fetchedRecords.filter {
+            $0.tracker?.id == tracker.id && $0.dueDate?.onlyDate == date.onlyDate
+        }
         
-        fetchRequest.predicate = NSPredicate(
-            format: "tracker.id == %@ AND dueDate >= %@ AND dueDate < %@",
-            tracker.id as CVarArg, startOfDay as NSDate, endOfDay! as NSDate
-        )
-        
-        if let recordsToDelete = try? coreData.context.fetch(fetchRequest), let record = recordsToDelete.first {
+        filteredRecords.forEach { record in
             cdTracker.removeFromCompleted(record)
             coreData.context.delete(record)
-            coreData.saveContext()
         }
+        
+        coreData.saveContext()
     }
     
     func fetchAllRecords() -> [TrackerRecord] {
@@ -105,12 +86,45 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         do {
             let trackerRecords = try coreData.context.fetch(fetchRequest)
             return trackerRecords.map {
-                TrackerRecord(id: $0.tracker?.id ?? UUID(), dueDate: $0.dueDate ?? Date())
+                TrackerRecord(id: $0.id ?? UUID(), dueDate: $0.dueDate ?? Date())
             }
         } catch {
             print("Ошибка при извлечении записей: \(error)")
             return []
         }
+    }
+    
+    func isTaskComplete(for tracker: Tracker, on date: Date) -> Bool {
+        guard let fetchedRecords = fetchedResultsController?.fetchedObjects else { return false }
+        
+        return fetchedRecords.contains { task in
+            guard let taskDate = task.dueDate?.onlyDate else { return false }
+            return task.tracker?.id == tracker.id && Calendar.current.isDate(taskDate, inSameDayAs: date.onlyDate)
+        }
+    }
+    
+    func countCompletedDays(for taskId: UUID) -> Int {
+        return fetchedResultsController?.fetchedObjects?.filter { $0.tracker?.id == taskId }.count ?? 0
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    private func convertToCDObject(from tracker: Tracker) -> CDTracker? {
+        
+        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
+            return existingTracker
+        }
+        
+        let newConvertedTracker = CDTracker(context: coreData.context)
+        newConvertedTracker.id = tracker.id
+        newConvertedTracker.name = tracker.name
+        newConvertedTracker.emoji = tracker.emoji
+        newConvertedTracker.color = tracker.color.toHexString()
+        newConvertedTracker.schedule = tracker.schedule as? NSObject
+        return newConvertedTracker
     }
     
     // MARK: - NSFetchedResultsControllerDelegate

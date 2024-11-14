@@ -12,9 +12,8 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Properties
     
-    var fetchedResultsController: NSFetchedResultsController<CDTrackerCategory>?
-    
     private let coreData = CoreDataManager.shared
+    private var fetchedResultsController: NSFetchedResultsController<CDTrackerCategory>?
     private let managedObjectContext: NSManagedObjectContext
     
     // MARK: - Initialization
@@ -27,7 +26,7 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Setup FetchedResultsControllerDelegate
     
-    func setupFetchedResultsController() {
+    private func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<CDTrackerCategory> = CDTrackerCategory.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
@@ -46,25 +45,6 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     // MARK: - Public Helper Methods
-    
-    func fetchOrCreateCategory(withTitle title: String) -> CDTrackerCategory? {
-        let fetchRequest: NSFetchRequest<CDTrackerCategory> = CDTrackerCategory.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "title == %@", title)
-        
-        do {
-            let results = try coreData.context.fetch(fetchRequest)
-            if let existingCategory = results.first {
-                return existingCategory
-            } else {
-                let newCategory = CDTrackerCategory(context: coreData.context)
-                newCategory.title = title
-                return newCategory
-            }
-        } catch {
-            print("Ошибка при получении или создании категории: \(error)")
-            return nil
-        }
-    }
     
     func fetchNumberOfCategories() -> Int {
         return fetchedResultsController?.fetchedObjects?.count ?? 0
@@ -85,5 +65,20 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         guard let category = fetchOrCreateCategory(withTitle: categoryTitle) else { return }
         category.addToTracker(tracker)
         coreData.saveContext()
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    private func fetchOrCreateCategory(withTitle title: String) -> CDTrackerCategory? {
+        if let categories = fetchedResultsController?.fetchedObjects,
+           let existingCategory = categories.first(where: { $0.title == title }) {
+            return existingCategory
+        }
+        
+        let newCategory = CDTrackerCategory(context: coreData.context)
+        newCategory.title = title
+        coreData.saveContext()
+        
+        return newCategory
     }
 }

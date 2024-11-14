@@ -14,7 +14,7 @@ final class CreateTaskViewController: UIViewController,
     
     // MARK: - Properties
     
-    var onTaskCreated: ((String, Tracker) -> Void)?
+    var onTaskCreated: (() -> Void)?
     var onClose: (() -> Void)?
     
     private let viewModel: CreateTaskViewModel
@@ -396,10 +396,9 @@ final class CreateTaskViewController: UIViewController,
     //MARK: - Actions
     
     @objc private func createTask() {
-        if let newTask = viewModel.createTask() {
-            onTaskCreated?(viewModel.getSelectedCategory(), newTask)
-            onClose?()
-        }
+        viewModel.createTask()
+        onTaskCreated?()
+        onClose?()
     }
     
     @objc private func cancelCreation() {

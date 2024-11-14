@@ -12,10 +12,10 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Properties
     
-    var fetchedResultsController: NSFetchedResultsController<CDTracker>?
     var onDataGetChanged: (() -> Void)?
     
     private let coreData = CoreDataManager.shared
+    private var fetchedResultsController: NSFetchedResultsController<CDTracker>?
     private let trackerCategoryStore = TrackerCategoryStore()
     private let managedObjectContext: NSManagedObjectContext
     
@@ -28,7 +28,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     // MARK: - Setup FetchedResultsControllerDelegate
-    func setupFetchedResultsController() {
+    private func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         
@@ -49,10 +49,6 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     // MARK: - Public Helper Methods
     
     func createTracker(entity: Tracker, category: String) {
-        guard let cdCategory = trackerCategoryStore.fetchOrCreateCategory(withTitle: category) else {
-            print("Не удалось получить или создать категорию")
-            return
-        }
         
         let cdTracker = CDTracker(context: coreData.context)
         cdTracker.id = entity.id
@@ -61,7 +57,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         cdTracker.color = entity.color.toHexString()
         cdTracker.schedule = entity.schedule as? NSObject
         
-        cdCategory.addToTracker(cdTracker)
+        trackerCategoryStore.addTrackerToCategory(toCategory: category, tracker: cdTracker)
         
         coreData.saveContext()
     }
