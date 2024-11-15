@@ -43,7 +43,6 @@ final class SectionHeaderCollectionView: UICollectionReusableView {
         addSubview(header)
         header.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            header.topAnchor.constraint(equalTo: topAnchor, constant: 22),
             header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
         ])
     }

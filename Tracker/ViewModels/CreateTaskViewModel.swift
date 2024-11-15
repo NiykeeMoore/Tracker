@@ -74,17 +74,18 @@ final class CreateTaskViewModel {
         return taskSchedule
     }
     
-    func createTask() -> Tracker? {
+    func createTask() {
         guard isReadyToCreateTask(),
               let selectedColorIndex = selectedColorIndex,
-              let selectedEmojiIndex = selectedEmojiIndex else { return nil }
+              let selectedEmojiIndex = selectedEmojiIndex else { return }
         
-        return Tracker(id: UUID(),
-                    name: taskName,
-                    color: colorsInSection[selectedColorIndex],
-                    emoji: emojisInSection[selectedEmojiIndex],
-                    schedule: getTaskSchedule()
-        )
+        let tracker = Tracker(id: UUID(),
+                              name: taskName,
+                              color: colorsInSection[selectedColorIndex],
+                              emoji: emojisInSection[selectedEmojiIndex],
+                              schedule: getTaskSchedule())
+        
+        StoreManager.shared.trackerStore.createTracker(entity: tracker, category: getSelectedCategory())
     }
     
     func isCreateButtonEnabled() -> Bool {

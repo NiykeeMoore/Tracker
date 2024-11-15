@@ -326,7 +326,7 @@
 				4BCEAEAF2CA5766A004C4D46 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		4BCEAEAB2CA5766A004C4D46 /* Build configuration list for PBXNativeTarget "Tracker" */ = {
 			isa = XCConfigurationList;
@@ -335,7 +335,7 @@
 				4BCEAEAD2CA5766A004C4D46 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

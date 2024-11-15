@@ -12,7 +12,7 @@ final class TypeSelectionViewController: UIViewController {
     // MARK: - Properties
     
     var onClose: (() -> Void)?
-    var onTaskCreated: ((String, Tracker) -> Void)?
+    var onTaskCreated: (() -> Void)?
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
@@ -89,9 +89,9 @@ final class TypeSelectionViewController: UIViewController {
     private func openCreateTaskViewController(viewModel: CreateTaskViewModel) {
         let createTaskVC = CreateTaskViewController(viewModel: viewModel)
         
-        createTaskVC.onTaskCreated = { [weak self] (category, newTask) in
+        createTaskVC.onTaskCreated = { [weak self] in
             guard let self else { return }
-            self.onTaskCreated?(category, newTask)
+            self.onTaskCreated?()
         }
         createTaskVC.onClose = { [weak self] in
             guard let self else { return }
