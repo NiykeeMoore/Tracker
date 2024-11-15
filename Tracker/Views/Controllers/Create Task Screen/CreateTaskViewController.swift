@@ -19,6 +19,22 @@ final class CreateTaskViewController: UIViewController,
     
     private let viewModel: CreateTaskViewModel
     
+    private lazy var scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        scrollView.keyboardDismissMode = .interactive
+        return scrollView
+    }()
+    
+    private lazy var contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
         label.configureLabel(font: .boldSystemFont(ofSize: 16), textColor: .ccBlack, aligment: .center)
@@ -31,7 +47,7 @@ final class CreateTaskViewController: UIViewController,
         textField.delegate = self
         textField.attributedPlaceholder = NSAttributedString(
             string: "Введите название трекера",
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.ccBlack]
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.ccGray]
         )
         let paddingViewLeft = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
         textField.leftView = paddingViewLeft
@@ -55,8 +71,8 @@ final class CreateTaskViewController: UIViewController,
     
     private lazy var collectionViewLayout: UICollectionViewFlowLayout = {
         let collectionViewLayout = UICollectionViewFlowLayout()
-        collectionViewLayout.scrollDirection = .vertical
         collectionViewLayout.minimumLineSpacing = 0
+        collectionViewLayout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 16, right: 0)
         return collectionViewLayout
     }()
     
@@ -82,6 +98,7 @@ final class CreateTaskViewController: UIViewController,
         collectionView.register(SectionHeaderCollectionView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SectionHeaderCollectionView.trackerHeaderIdentifier)
         collectionView.allowsMultipleSelection = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.isScrollEnabled = false
         return collectionView
     }()
     
@@ -135,10 +152,13 @@ final class CreateTaskViewController: UIViewController,
     private func configureUI() {
         view.backgroundColor = .white
         
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        
         [titleViewController, taskNameField, taskNameLengthWarning,
          selectionTableView, collectionView, stackViewButtons].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview($0)
+            contentView.addSubview($0)
         }
         titleViewController.text = viewModel.taskType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
         collectionView.layoutIfNeeded()
@@ -148,12 +168,23 @@ final class CreateTaskViewController: UIViewController,
     
     private func configureConstraints() {
         NSLayoutConstraint.activate([
-            titleViewController.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleViewController.topAnchor.constraint(equalTo: view.topAnchor, constant: 35),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            taskNameField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            taskNameField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            taskNameField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            
+            titleViewController.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            titleViewController.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 35),
+            
+            taskNameField.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            taskNameField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            taskNameField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             taskNameField.heightAnchor.constraint(equalToConstant: 75),
             taskNameField.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 38),
             
@@ -165,14 +196,15 @@ final class CreateTaskViewController: UIViewController,
             selectionTableView.leadingAnchor.constraint(equalTo: taskNameField.leadingAnchor),
             selectionTableView.trailingAnchor.constraint(equalTo: taskNameField.trailingAnchor),
             
-            collectionView.topAnchor.constraint(equalTo: selectionTableView.bottomAnchor, constant: 20),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            collectionView.topAnchor.constraint(equalTo: selectionTableView.bottomAnchor, constant: 32),
+            collectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            collectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: stackViewButtons.topAnchor, constant: -16),
+            collectionView.heightAnchor.constraint(equalToConstant: calculateCollectionViewHeight()),
             
-            stackViewButtons.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            stackViewButtons.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            stackViewButtons.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            stackViewButtons.leadingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            stackViewButtons.trailingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            stackViewButtons.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             stackViewButtons.heightAnchor.constraint(equalToConstant: 60)
         ])
         
@@ -291,7 +323,7 @@ final class CreateTaskViewController: UIViewController,
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: 40, height: 40)
+        return CGSize(width: collectionView.bounds.width, height: 19)
     }
     
     // MARK: - UICollectionViewDelegate
@@ -391,6 +423,24 @@ final class CreateTaskViewController: UIViewController,
     
     private func getNumberOfRowsInSection() -> Int {
         return viewModel.taskType == .habit ? viewModel.selectionButtonTitles.count : viewModel.selectionButtonTitles.dropLast().count
+    }
+    
+    private func calculateCollectionViewHeight() -> CGFloat {
+        let numberOfSections = viewModel.collectionViewSectionHeaders.count
+        var totalHeight: CGFloat = 0
+        let itemsPerRow: CGFloat = 7
+        let padding: CGFloat = 5
+        
+        for section in 0..<numberOfSections {
+            let itemsInSection = section == 0 ? viewModel.emojisInSection.count : viewModel.colorsInSection.count
+            let rows = ceil(CGFloat(itemsInSection) / itemsPerRow) // Округление вверх
+            let rowHeight = (UIScreen.main.bounds.width - (padding * (itemsPerRow - 1))) / itemsPerRow
+            totalHeight += rows * rowHeight
+        }
+        
+        totalHeight += CGFloat(numberOfSections * 40) // Высота заголовков секций
+        totalHeight += CGFloat((numberOfSections - 1) * 24) // Отступы между секциями
+        return totalHeight
     }
     
     //MARK: - Actions

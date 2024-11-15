@@ -48,7 +48,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 9
         layout.sectionInsetReference = .fromContentInset
-        layout.sectionInset = UIEdgeInsets(top: 36, left: 0, bottom: 0, right: 0)
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 0, right: 0)
         return layout
     }()
     
