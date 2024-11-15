@@ -12,13 +12,15 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     
     // MARK: - Properties
     
-    private let coreData = CoreDataManager.shared
+    private let coreData: CoreDataManager
     private var fetchedResultsController: NSFetchedResultsController<CDTrackerCategory>?
     private let managedObjectContext: NSManagedObjectContext
     
     // MARK: - Initialization
     
-    init(managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+    init(coreData: CoreDataManager = CoreDataManager.shared,
+         managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+        self.coreData = coreData
         self.managedObjectContext = managedObjectContext
         super.init()
         setupFetchedResultsController()
@@ -47,12 +49,12 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     // MARK: - Public Helper Methods
     
     func fetchNumberOfCategories() -> Int {
+        try? fetchedResultsController?.performFetch()
         return fetchedResultsController?.fetchedObjects?.count ?? 0
     }
     
     func fetchAllCategories() -> [TrackerCategory]? {
-        let trackerStore = TrackerStore()
-        guard let allFetchedTrackers = trackerStore.fetchAllTrackers() else { return [] }
+        guard let allFetchedTrackers = StoreManager.shared.trackerStore.fetchAllTrackers() else { return [] }
         
         return fetchedResultsController?.fetchedObjects?.map { category in
             TrackerCategory(title: category.title ?? "",

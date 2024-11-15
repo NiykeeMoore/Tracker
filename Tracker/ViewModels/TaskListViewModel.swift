@@ -23,9 +23,9 @@ final class TaskListViewModel {
     private var currentDate: Date {
         return Date()
     }
-    private let trackerStore = TrackerStore()
-    private let trackerRecordStore = TrackerRecordStore()
-    private let trackerCategoryStore = TrackerCategoryStore()
+    private let trackerStore = StoreManager.shared.trackerStore
+    private let trackerRecordStore = StoreManager.shared.recordStore
+    private let trackerCategoryStore = StoreManager.shared.categoryStore
     
     init() {
         trackerStore.onDataGetChanged = { [weak self] in
@@ -48,15 +48,12 @@ final class TaskListViewModel {
      */
     func fetchTasksForDate(_ date: Date) -> [Tracker] {
         guard let weekDayToday = getDayOfWeek(from: date),
-              let fetchedTasks = trackerStore.fetchAllTrackers(), !fetchedTasks.isEmpty else { return [] }
-        
-        return fetchedTasks.filter { task in
-            task.schedule?.contains(weekDayToday) == true
-        }
+              let fetchedTasks = trackerStore.fetchTrackersOnDate(on: weekDayToday), !fetchedTasks.isEmpty else { return [] }
+        return fetchedTasks
     }
     
     func hasTasksForToday(in section: Int) -> Bool {
-        return fetchTasksForDate(currentDate).isEmpty == false
+        return fetchTasksForDate(selectedDay).isEmpty == false
     }
     
     func isTaskCompleted(for task: Tracker, on date: Date) -> Bool {
@@ -69,7 +66,6 @@ final class TaskListViewModel {
         } else {
             markTaskAsCompleted(task, on: date)
         }
-        onDataGetChanged?()
     }
     
     func completedDaysCount(for taskId: UUID) -> Int {
@@ -96,11 +92,9 @@ final class TaskListViewModel {
     
     private func markTaskAsCompleted(_ task: Tracker, on date: Date) {
         trackerRecordStore.addRecordForTracker(for: task, on: date)
-        onDataGetChanged?()
     }
     
     private func unmarkTaskAsCompleted(_ task: Tracker, on date: Date) {
         trackerRecordStore.removeRecordForTracker(for: task, on: date)
-        onDataGetChanged?()
     }
 }

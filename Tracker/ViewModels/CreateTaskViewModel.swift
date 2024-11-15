@@ -85,8 +85,7 @@ final class CreateTaskViewModel {
                               emoji: emojisInSection[selectedEmojiIndex],
                               schedule: getTaskSchedule())
         
-        let trackerStore = TrackerStore()
-        trackerStore.createTracker(entity: tracker, category: getSelectedCategory())
+        StoreManager.shared.trackerStore.createTracker(entity: tracker, category: getSelectedCategory())
     }
     
     func isCreateButtonEnabled() -> Bool {

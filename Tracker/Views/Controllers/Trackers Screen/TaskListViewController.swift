@@ -84,7 +84,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         viewModel.onDataGetChanged = { [weak self] in
             DispatchQueue.main.async {
                 self?.collectionView.reloadData()
-                print("onDataGetChanged")
             }
         }
     }
@@ -188,7 +187,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             let updatedCount = self.viewModel.completedDaysCount(for: task.id)
             cell.updateDayCountLabel(with: updatedCount)
         }
-        print("cellForItem -> \(cell)")
         return cell
     }
     

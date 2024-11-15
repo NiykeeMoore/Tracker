@@ -14,14 +14,15 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     var onDataGetChanged: (() -> Void)?
     
-    private let coreData = CoreDataManager.shared
+    private let coreData: CoreDataManager
     private var fetchedResultsController: NSFetchedResultsController<CDTracker>?
-    private let trackerCategoryStore = TrackerCategoryStore()
     private let managedObjectContext: NSManagedObjectContext
     
     // MARK: - Initialization
     
-    init(managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+    init(coreData: CoreDataManager = CoreDataManager.shared,
+         managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+        self.coreData = coreData
         self.managedObjectContext = managedObjectContext
         super.init()
         setupFetchedResultsController()
@@ -57,7 +58,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         cdTracker.color = entity.color.toHexString()
         cdTracker.schedule = entity.schedule as? NSObject
         
-        trackerCategoryStore.addTrackerToCategory(toCategory: category, tracker: cdTracker)
+        StoreManager.shared.categoryStore.addTrackerToCategory(toCategory: category, tracker: cdTracker)
         
         coreData.saveContext()
     }
@@ -73,21 +74,28 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
     }
     
-    func convertToCDObject(from tracker: Tracker) -> CDTracker? {
-        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+    func fetchTrackersOnDate(on weekday: Weekdays) -> [Tracker]? {
+        guard let fetchedObjects = fetchedResultsController?.fetchedObjects else { return [] }
         
-        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
-            return existingTracker
+        let trackersForDate = fetchedObjects.compactMap { cdTracker -> Tracker? in
+            guard let schedule = cdTracker.schedule as? [Weekdays],
+                  schedule.contains(weekday) else { return nil }
+            
+            return Tracker(
+                id: cdTracker.id ?? UUID(),
+                name: cdTracker.name ?? "",
+                color: UIColor(hex: cdTracker.color ?? "") ?? .clear,
+                emoji: cdTracker.emoji ?? "",
+                schedule: schedule
+            )
         }
         
-        let newConvertedTracker = CDTracker(context: coreData.context)
-        newConvertedTracker.id = tracker.id
-        newConvertedTracker.name = tracker.name
-        newConvertedTracker.emoji = tracker.emoji
-        newConvertedTracker.color = tracker.color.toHexString()
-        newConvertedTracker.schedule = tracker.schedule as? NSObject
-        return newConvertedTracker
+        return trackersForDate
+    }
+    
+    func fetchCDTracker(by tracker: Tracker) -> CDTracker? {
+        guard let fetchedObjects = fetchedResultsController?.fetchedObjects else { return nil }
+        return fetchedObjects.first(where: { $0.id == tracker.id })
     }
     
     // MARK: - NSFetchedResultsControllerDelegate

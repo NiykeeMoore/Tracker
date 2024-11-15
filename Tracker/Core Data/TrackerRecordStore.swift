@@ -14,14 +14,15 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     
     var onRecordsUpdated: (() -> Void)?
     
-    private let coreData = CoreDataManager.shared
+    private let coreData: CoreDataManager
     private var fetchedResultsController: NSFetchedResultsController<CDTrackerRecord>?
-    private let trackerStore = TrackerStore()
     private let managedObjectContext: NSManagedObjectContext
     
     // MARK: - Initialization
     
-    init(managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+    init(coreData: CoreDataManager = CoreDataManager.shared,
+         managedObjectContext: NSManagedObjectContext = CoreDataManager.shared.persistentContainer.viewContext) {
+        self.coreData = coreData
         self.managedObjectContext = managedObjectContext
         super.init()
         setupFetchedResultsController()
@@ -66,7 +67,10 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func removeRecordForTracker(for tracker: Tracker, on date: Date) {
-        guard let cdTracker = convertToCDObject(from: tracker) else { return }
+        guard let cdTracker = convertToCDObject(from: tracker) else {
+            print("Ошибка: не удалось конвертировать трекер в CD объект")
+            return
+        }
         guard let fetchedRecords = fetchedResultsController?.fetchedObjects else { return }
         
         let filteredRecords = fetchedRecords.filter {
@@ -110,11 +114,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     // MARK: - Private Helper Methods
     
     private func convertToCDObject(from tracker: Tracker) -> CDTracker? {
-        
-        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
-        
-        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
+        if let existingTracker = StoreManager.shared.trackerStore.fetchCDTracker(by: tracker) {
             return existingTracker
         }
         
