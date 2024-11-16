@@ -63,9 +63,12 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         } ?? []
     }
     
-    func addTrackerToCategory(toCategory categoryTitle: String, tracker: CDTracker) {
+    func addTrackerToCategory(toCategory categoryTitle: String, tracker: Tracker) {
         guard let category = fetchOrCreateCategory(withTitle: categoryTitle) else { return }
-        category.addToTracker(tracker)
+        
+        let convertedTracker = convertToCDObject(from: tracker)
+        category.addToTracker(convertedTracker)
+        
         coreData.saveContext()
     }
     
@@ -82,5 +85,29 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         coreData.saveContext()
         
         return newCategory
+    }
+    
+    private func convertToCDObject(from tracker: Tracker) -> CDTracker {
+        if let existingTracker = fetchCDTracker(by: tracker) {
+            return existingTracker
+        }
+        
+        let newConvertedTracker = CDTracker(context: coreData.context)
+        newConvertedTracker.id = tracker.id
+        newConvertedTracker.name = tracker.name
+        newConvertedTracker.emoji = tracker.emoji
+        newConvertedTracker.color = tracker.color.toHexString()
+        newConvertedTracker.schedule = tracker.schedule as? NSObject
+        return newConvertedTracker
+    }
+    
+    private func fetchCDTracker(by tracker: Tracker) -> CDTracker? {
+        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
+            return existingTracker
+        }
+        return nil
     }
 }

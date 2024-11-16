@@ -82,19 +82,22 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
         NSLayoutConstraint.activate([
             titleViewController.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleViewController.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 35),
+            titleViewController.heightAnchor.constraint(equalToConstant: 22),
             
-            scheduleTableView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 15),
+            scheduleTableView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 39),
             scheduleTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             scheduleTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             
             setScheduleButton.heightAnchor.constraint(equalToConstant: 60),
-            setScheduleButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             setScheduleButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             setScheduleButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             setScheduleButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -15),
+            scheduleTableView.bottomAnchor.constraint(lessThanOrEqualTo: setScheduleButton.topAnchor, constant: -24)
         ])
         
-        scheduleTableView.heightAnchor.constraint(equalToConstant: CGFloat(numberOfRows) * rowHeight).isActive = true
+        let contentHeightConstraint = scheduleTableView.heightAnchor.constraint(equalToConstant: CGFloat(numberOfRows) * rowHeight)
+        contentHeightConstraint.priority = UILayoutPriority(999)
+        contentHeightConstraint.isActive = true
     }
     
     // MARK: - UITableViewDataSource

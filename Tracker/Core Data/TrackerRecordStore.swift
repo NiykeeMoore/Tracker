@@ -114,7 +114,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     // MARK: - Private Helper Methods
     
     private func convertToCDObject(from tracker: Tracker) -> CDTracker? {
-        if let existingTracker = StoreManager.shared.trackerStore.fetchCDTracker(by: tracker) {
+        if let existingTracker = fetchCDTracker(by: tracker) {
             return existingTracker
         }
         
@@ -125,6 +125,16 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         newConvertedTracker.color = tracker.color.toHexString()
         newConvertedTracker.schedule = tracker.schedule as? NSObject
         return newConvertedTracker
+    }
+    
+    private func fetchCDTracker(by tracker: Tracker) -> CDTracker? {
+        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
+            return existingTracker
+        }
+        return nil
     }
     
     // MARK: - NSFetchedResultsControllerDelegate

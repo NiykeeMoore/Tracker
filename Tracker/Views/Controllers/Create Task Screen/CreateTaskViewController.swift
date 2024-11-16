@@ -72,7 +72,7 @@ final class CreateTaskViewController: UIViewController,
     private lazy var collectionViewLayout: UICollectionViewFlowLayout = {
         let collectionViewLayout = UICollectionViewFlowLayout()
         collectionViewLayout.minimumLineSpacing = 0
-        collectionViewLayout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 16, right: 0)
+        collectionViewLayout.minimumInteritemSpacing = 0
         return collectionViewLayout
     }()
     
@@ -162,16 +162,18 @@ final class CreateTaskViewController: UIViewController,
         }
         titleViewController.text = viewModel.taskType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
         collectionView.layoutIfNeeded()
+        
+        updateCreateTaskButtonstate()
     }
     
     // MARK: - Constraints
     
     private func configureConstraints() {
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
@@ -202,8 +204,8 @@ final class CreateTaskViewController: UIViewController,
             collectionView.bottomAnchor.constraint(equalTo: stackViewButtons.topAnchor, constant: -16),
             collectionView.heightAnchor.constraint(equalToConstant: calculateCollectionViewHeight()),
             
-            stackViewButtons.leadingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            stackViewButtons.trailingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            stackViewButtons.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            stackViewButtons.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             stackViewButtons.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             stackViewButtons.heightAnchor.constraint(equalToConstant: 60)
         ])
@@ -324,6 +326,10 @@ final class CreateTaskViewController: UIViewController,
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         return CGSize(width: collectionView.bounds.width, height: 19)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0)
     }
     
     // MARK: - UICollectionViewDelegate

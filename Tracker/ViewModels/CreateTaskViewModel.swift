@@ -130,9 +130,9 @@ final class CreateTaskViewModel {
     
     private func isReadyToCreateTask() -> Bool {
         if taskType == .irregularEvent {
-            return !taskName.isEmpty && selectedEmojiIndex != nil && selectedColorIndex != nil
+            return selectedEmojiIndex != nil && selectedColorIndex != nil
         }
-        return !taskName.isEmpty && taskSchedule != nil && selectedEmojiIndex != nil && selectedColorIndex != nil
+        return taskSchedule != nil && selectedEmojiIndex != nil && selectedColorIndex != nil
     }
     
     private func cutTheDay(days: [Weekdays]) -> String {

@@ -58,7 +58,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         cdTracker.color = entity.color.toHexString()
         cdTracker.schedule = entity.schedule as? NSObject
         
-        StoreManager.shared.categoryStore.addTrackerToCategory(toCategory: category, tracker: cdTracker)
+        StoreManager.shared.categoryStore.addTrackerToCategory(toCategory: category, tracker: entity)
         
         coreData.saveContext()
     }
@@ -91,11 +91,6 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
         
         return trackersForDate
-    }
-    
-    func fetchCDTracker(by tracker: Tracker) -> CDTracker? {
-        guard let fetchedObjects = fetchedResultsController?.fetchedObjects else { return nil }
-        return fetchedObjects.first(where: { $0.id == tracker.id })
     }
     
     // MARK: - NSFetchedResultsControllerDelegate
