@@ -11,68 +11,57 @@ final class TaskListViewModel {
     
     // MARK: - Properties
     
-    var categories: [TrackerCategory] = [] {
-        didSet {
-            onCategoriesUpdated?(categories)
-        }
-    }
     var selectedDay: Date = Date() {
         didSet {
             onSelectedDayChanged?()
         }
     }
     var onSelectedDayChanged: (() -> Void)?
-    var onCategoriesUpdated: (([TrackerCategory]) -> Void)?
-    var onCurrentDateUpdated: ((Date) -> Void)?
+    var onDataGetChanged: (() -> Void)?
+    var onCompletedDaysCountUpdated: (() -> Void)?
     
-    private var tasksCompleted: [TrackerRecord] = []
-    private var completedTaskIds: Set<UUID> = []
-    private(set) var currentDate: Date = Date() {
-        didSet {
-            onCurrentDateUpdated?(currentDate)
+    private var currentDate: Date {
+        return Date()
+    }
+    private let trackerStore = StoreManager.shared.trackerStore
+    private let trackerRecordStore = StoreManager.shared.recordStore
+    private let trackerCategoryStore = StoreManager.shared.categoryStore
+    
+    init() {
+        trackerStore.onDataGetChanged = { [weak self] in
+            self?.onDataGetChanged?()
+        }
+        
+        trackerRecordStore.onRecordsUpdated = { [weak self] in
+            self?.onCompletedDaysCountUpdated?()
         }
     }
-    
     // MARK: - Public Helper Methods
     
-    func listTask(category: String, tracker: Tracker) {
-        if let index = categories.firstIndex(where: { $0.title == category }) {
-            let updatedTasks = categories[index].tasks + [tracker]
-            let updatedCategory = TrackerCategory(title: category, tasks: updatedTasks)
-            categories[index] = updatedCategory
-        } else {
-            categories.append(TrackerCategory(title: category, tasks: [tracker]))
-        }
+    func fetchAllCategories() -> [TrackerCategory]?{
+        return trackerCategoryStore.fetchAllCategories()
     }
     
     /*
      fixme:
      - Нерегулярная задача будет отображаться в день создания каждый день недели
      */
-    func tasksForDate(_ date: Date) -> [Tracker] {
-        guard let weekDayToday = getDayOfWeek(from: date) else { return [] }
-        
-        return categories.flatMap { category in
-            category.tasks.filter { task in
-                return task.schedule?.contains(weekDayToday) == true
-            }
-        }
-    }
-    
-    func updateCurrentDate(to date: Date) {
-        currentDate = date
+    func fetchTasksForDate(_ date: Date) -> [Tracker] {
+        guard let weekDayToday = getDayOfWeek(from: date),
+              let fetchedTasks = trackerStore.fetchTrackersOnDate(on: weekDayToday), !fetchedTasks.isEmpty else { return [] }
+        return fetchedTasks
     }
     
     func hasTasksForToday(in section: Int) -> Bool {
-        return !tasksForDate(currentDate).isEmpty
+        return fetchTasksForDate(selectedDay).isEmpty == false
     }
     
-    func isTaskCompleted(_ taskId: UUID, for date: Date) -> Bool {
-        return tasksCompleted.contains { $0.id == taskId && Calendar.current.isDate($0.dueDate, inSameDayAs: date) }
+    func isTaskCompleted(for task: Tracker, on date: Date) -> Bool {
+        return trackerRecordStore.isTaskComplete(for: task, on: date)
     }
     
-    func toggleTaskCompletion(_ task: Tracker, on date: Date) {
-        if isTaskCompleted(task.id, for: date) {
+    func toggleCompletionStatus(_ task: Tracker, on date: Date) {
+        if isTaskCompleted(for: task, on: date) {
             unmarkTaskAsCompleted(task, on: date)
         } else {
             markTaskAsCompleted(task, on: date)
@@ -80,7 +69,15 @@ final class TaskListViewModel {
     }
     
     func completedDaysCount(for taskId: UUID) -> Int {
-        return tasksCompleted.filter { $0.id == taskId }.count
+        return trackerRecordStore.countCompletedDays(for: taskId)
+    }
+    
+    func numberOfItems(in section: Int) -> Int {
+        return fetchTasksForDate(selectedDay.onlyDate).count
+    }
+    
+    func numberOfSections() -> Int {
+        return trackerCategoryStore.fetchNumberOfCategories()
     }
     
     // MARK: - Private Helper Methods
@@ -94,15 +91,10 @@ final class TaskListViewModel {
     }
     
     private func markTaskAsCompleted(_ task: Tracker, on date: Date) {
-        let taskComplete = TrackerRecord(id: task.id, dueDate: date)
-        tasksCompleted.append(taskComplete)
-        completedTaskIds.insert(task.id)
+        trackerRecordStore.addRecordForTracker(for: task, on: date)
     }
     
     private func unmarkTaskAsCompleted(_ task: Tracker, on date: Date) {
-        tasksCompleted.removeAll { $0.id == task.id && Calendar.current.isDate($0.dueDate, inSameDayAs: date) }
-        if !tasksCompleted.contains(where: { $0.id == task.id }) {
-            completedTaskIds.remove(task.id)
-        }
+        trackerRecordStore.removeRecordForTracker(for: task, on: date)
     }
 }

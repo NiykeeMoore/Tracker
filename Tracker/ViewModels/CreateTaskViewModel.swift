@@ -74,17 +74,18 @@ final class CreateTaskViewModel {
         return taskSchedule
     }
     
-    func createTask() -> Tracker? {
+    func createTask() {
         guard isReadyToCreateTask(),
               let selectedColorIndex = selectedColorIndex,
-              let selectedEmojiIndex = selectedEmojiIndex else { return nil }
+              let selectedEmojiIndex = selectedEmojiIndex else { return }
         
-        return Tracker(id: UUID(),
-                    name: taskName,
-                    color: colorsInSection[selectedColorIndex],
-                    emoji: emojisInSection[selectedEmojiIndex],
-                    schedule: getTaskSchedule()
-        )
+        let tracker = Tracker(id: UUID(),
+                              name: taskName,
+                              color: colorsInSection[selectedColorIndex],
+                              emoji: emojisInSection[selectedEmojiIndex],
+                              schedule: getTaskSchedule())
+        
+        StoreManager.shared.trackerStore.createTracker(entity: tracker, category: getSelectedCategory())
     }
     
     func isCreateButtonEnabled() -> Bool {
@@ -129,9 +130,9 @@ final class CreateTaskViewModel {
     
     private func isReadyToCreateTask() -> Bool {
         if taskType == .irregularEvent {
-            return !taskName.isEmpty && selectedEmojiIndex != nil && selectedColorIndex != nil
+            return selectedEmojiIndex != nil && selectedColorIndex != nil
         }
-        return !taskName.isEmpty && taskSchedule != nil && selectedEmojiIndex != nil && selectedColorIndex != nil
+        return taskSchedule != nil && selectedEmojiIndex != nil && selectedColorIndex != nil
     }
     
     private func cutTheDay(days: [Weekdays]) -> String {
