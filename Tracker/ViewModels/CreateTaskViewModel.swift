@@ -13,14 +13,18 @@ final class CreateTaskViewModel {
     
     let collectionViewSectionHeaders: [String] = ["Emoji", "Цвет"]
     let selectionButtonTitles: [String] = ["Категория", "Расписание"]
-    var selectionDescription: String? {
-        didSet {
-            onSelectionDescriptionChanged?(selectionDescription)
-        }
-    }
     
     var taskType: TaskType
-    var taskSchedule: [Weekdays]?
+    var taskCategory: String? {
+        didSet {
+            onCategoryChanged?(taskCategory)
+        }
+    }
+    var taskSchedule: [Weekdays]? {
+        didSet {
+            onScheduleChanged?(taskSchedule)
+        }
+    }
     var selectedDaysInSchedule: [Weekdays] = []
     var taskName: String = "Без названия" {
         didSet {
@@ -43,7 +47,8 @@ final class CreateTaskViewModel {
     var onSectionsUpdated: (() -> Void)?
     var onTaskNameChanged: ((String?) -> Void)?
     var onWarningMessageChanged: ((String?) -> Void)?
-    var onSelectionDescriptionChanged: ((String?) -> Void)?
+    var onCategoryChanged: ((String?) -> Void)?
+    var onScheduleChanged: (([Weekdays]?) -> Void)?
     
     private(set) var warningMessage: String? {
         didSet {
@@ -62,10 +67,6 @@ final class CreateTaskViewModel {
     
     // MARK: - Public Helper Methods
     
-    func getSelectedCategory() -> String {
-        return "KEK"
-    }
-    
     func getTaskSchedule() -> [Weekdays]? {
         if taskType == .irregularEvent {
             let currentWeekday = getDayOfWeek(from: currentDate)
@@ -76,6 +77,7 @@ final class CreateTaskViewModel {
     
     func createTask() {
         guard isReadyToCreateTask(),
+              taskCategory != nil,
               let selectedColorIndex = selectedColorIndex,
               let selectedEmojiIndex = selectedEmojiIndex else { return }
         
@@ -85,7 +87,8 @@ final class CreateTaskViewModel {
                               emoji: emojisInSection[selectedEmojiIndex],
                               schedule: getTaskSchedule())
         
-        StoreManager.shared.trackerStore.createTracker(entity: tracker, category: getSelectedCategory())
+        StoreManager.shared.trackerStore.createTracker(entity: tracker,
+                                                       category: taskCategory ?? "Ошибка в получении категории")
     }
     
     func isCreateButtonEnabled() -> Bool {
@@ -123,6 +126,17 @@ final class CreateTaskViewModel {
             if let index = selectedDaysInSchedule.firstIndex(of: day) {
                 selectedDaysInSchedule.remove(at: index)
             }
+        }
+    }
+    
+    func setSelectionButtonsDescription(at index: Int) -> String {
+        switch index {
+        case 0:
+            return taskCategory ?? ""
+        case 1:
+            return cutTheDay(days: taskSchedule ?? [])
+        default:
+            return "Ошибка установки описания к ячейке с индексом \(index)"
         }
     }
     

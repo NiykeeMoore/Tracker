@@ -55,7 +55,7 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     
     func fetchAllCategories() -> [TrackerCategory]? {
         guard let allFetchedTrackers = StoreManager.shared.trackerStore.fetchAllTrackers() else { return [] }
-        
+        try? fetchedResultsController?.performFetch()
         return fetchedResultsController?.fetchedObjects?.map { category in
             TrackerCategory(title: category.title ?? "",
                             tasks: allFetchedTrackers)
@@ -64,17 +64,26 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func addTrackerToCategory(toCategory categoryTitle: String, tracker: Tracker) {
-        guard let category = fetchOrCreateCategory(withTitle: categoryTitle) else { return }
+        guard let category = createOrFetchCategory(withTitle: categoryTitle) else { return }
         
-        let convertedTracker = convertToCDObject(from: tracker)
-        category.addToTracker(convertedTracker)
+        let convertedTracker = fetchCDTracker(by: tracker)
+        convertedTracker.map { category.addToTracker($0) }
         
         coreData.saveContext()
     }
     
+    func fetchAllCategoriesName() -> [String] {
+        try? fetchedResultsController?.performFetch()
+        return fetchAllCategories()?.map { $0.title } ?? []
+    }
+    
+    func createCategory(name newCategory: String) {
+        guard let _ = createOrFetchCategory(withTitle: newCategory) else { return }
+    }
+    
     // MARK: - Private Helper Methods
     
-    private func fetchOrCreateCategory(withTitle title: String) -> CDTrackerCategory? {
+    private func createOrFetchCategory(withTitle title: String) -> CDTrackerCategory? {
         if let categories = fetchedResultsController?.fetchedObjects,
            let existingCategory = categories.first(where: { $0.title == title }) {
             return existingCategory

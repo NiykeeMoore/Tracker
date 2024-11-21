@@ -15,11 +15,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         
-        let rootViewController = TabBarController()
-        
-        window.rootViewController = rootViewController
-        self.window = window
+        if UserDefaultsSettings.shared.onboardingWasShown {
+            window.rootViewController = TabBarController()
+        } else {
+            let onboardingVC = OnboardingViewController()
+            onboardingVC.onboardingDidEnd = { [weak self] in
+                self?.switchToMainViewController()
+            }
+            window.rootViewController = onboardingVC
+        }
         window.makeKeyAndVisible()
+        self.window = window
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -48,5 +54,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
+    }
+    
+    private func switchToMainViewController() {
+        let tabBarController = TabBarController()
+        tabBarController.modalTransitionStyle = .crossDissolve
+        tabBarController.modalPresentationStyle = .fullScreen
+        
+        guard let window = window else {
+            window?.rootViewController = tabBarController
+            return
+        }
+        
+        UIView.transition(with: window, duration: 0.2, options: .transitionCrossDissolve, animations: {
+            window.rootViewController = tabBarController
+        })
     }
 }

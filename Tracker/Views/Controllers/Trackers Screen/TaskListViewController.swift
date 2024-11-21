@@ -48,7 +48,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 9
         layout.sectionInsetReference = .fromContentInset
-        layout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 0, right: 0)
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 0)
         return layout
     }()
     
@@ -112,7 +112,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             taskDatePicker.widthAnchor.constraint(equalToConstant: 97),
             taskDatePicker.heightAnchor.constraint(equalToConstant: 34),
             
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),

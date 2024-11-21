@@ -12,7 +12,6 @@ final class SettingTaskSelectionCell: UITableViewCell {
     // MARK: - Properties
     
     static let reuseIdentifier = "Setting Task Cell"
-    var onSelectionDescriptionChanged: ((String?) -> Void)?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
