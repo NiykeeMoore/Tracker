@@ -46,14 +46,12 @@ final class TaskListViewModel {
      fixme:
      - Нерегулярная задача будет отображаться в день создания каждый день недели
      */
-    func fetchTasksForDate(_ date: Date) -> [Tracker] {
-        guard let weekDayToday = getDayOfWeek(from: date),
-              let fetchedTasks = trackerStore.fetchTrackersOnDate(on: weekDayToday), !fetchedTasks.isEmpty else { return [] }
-        return fetchedTasks
+    func fetchTasksForDate(_ date: Date) -> [TrackerCategory] {
+        return trackerCategoryStore.fetchCategoriesOnDate(date: date)
     }
     
-    func hasTasksForToday(in section: Int) -> Bool {
-        return fetchTasksForDate(selectedDay).isEmpty == false
+    func hasTasksForToday() -> Bool {
+        return fetchTasksForDate(selectedDay.onlyDate).isEmpty == false
     }
     
     func isTaskCompleted(for task: Tracker, on date: Date) -> Bool {
@@ -77,18 +75,10 @@ final class TaskListViewModel {
     }
     
     func numberOfSections() -> Int {
-        return trackerCategoryStore.fetchNumberOfCategories()
+        return fetchTasksForDate(selectedDay.onlyDate).count
     }
     
     // MARK: - Private Helper Methods
-    
-    private func getDayOfWeek(from date: Date) -> Weekdays? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "EEEE"
-        dateFormatter.locale = Locale(identifier: "ru_RU")
-        let dayString = dateFormatter.string(from: date).capitalized
-        return Weekdays(rawValue: dayString)
-    }
     
     private func markTaskAsCompleted(_ task: Tracker, on date: Date) {
         trackerRecordStore.addRecordForTracker(for: task, on: date)
