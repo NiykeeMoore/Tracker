@@ -7,7 +7,7 @@
 
 import Foundation
 
-class OnboardingViewModel {
+final class OnboardingViewModel {
     
     private let userDefaults = UserDefaults.standard
     private let onboardingKey = "onboardingWasShown"

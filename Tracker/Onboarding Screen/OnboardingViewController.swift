@@ -7,7 +7,7 @@
 
 import UIKit
 
-class OnboardingViewController: UIViewController {
+final class OnboardingViewController: UIViewController {
     var onboardingDidEnd: (() -> Void)?
     
     private let viewModel = OnboardingViewModel()
@@ -45,7 +45,7 @@ class OnboardingViewController: UIViewController {
         setupConstraints()
     }
     
-    func setupUI() {
+    private func setupUI() {
         pageControl.numberOfPages = pages.count
         
         [pageControl, skipOnboardingButton].forEach {
@@ -54,7 +54,7 @@ class OnboardingViewController: UIViewController {
         }
     }
     
-    func setupConstraints() {
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             pageControl.bottomAnchor.constraint(equalTo: skipOnboardingButton.bottomAnchor, constant: -60),
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class OnboardingPageViewController: UIViewController {
+final class OnboardingPageViewController: UIViewController {
     private let imageName: String
     private let descriptionText: String
     
