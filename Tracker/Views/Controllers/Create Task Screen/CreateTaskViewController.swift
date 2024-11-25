@@ -145,6 +145,18 @@ final class CreateTaskViewController: UIViewController,
             guard let self else { return }
             self.updateWarningLabel(with: message)
         }
+        
+        viewModel.onCategoryChanged = { [weak self] selectedCategory in
+            guard let self = self else { return }
+            let indexPath = IndexPath(row: 0, section: 0)
+            self.selectionTableView.reloadRows(at: [indexPath], with: .none)
+        }
+        
+        viewModel.onScheduleChanged = { [weak self] newDescription in
+            guard let self = self else { return }
+            let indexPath = IndexPath(row: 1, section: 0)
+            self.selectionTableView.reloadRows(at: [indexPath], with: .none)
+        }
     }
     
     // MARK: - UI Setup
@@ -244,15 +256,12 @@ final class CreateTaskViewController: UIViewController,
             return UITableViewCell()
         }
         
-        cell.renderCell(title: viewModel.selectionButtonTitles[indexPath.row], description: viewModel.selectionDescription ?? "")
+        let title = viewModel.selectionButtonTitles[indexPath.row]
+        let description = viewModel.setSelectionButtonsDescription(at: indexPath.row)
+        cell.renderCell(title: title, description: description)
         
         if indexPath.row == getNumberOfRowsInSection() - 1 {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        }
-        
-        viewModel.onSelectionDescriptionChanged = { [weak self] newDescription in
-            guard let self = self else { return }
-            cell.renderCell(title: viewModel.selectionButtonTitles[indexPath.row], description: viewModel.selectionDescription ?? "")
         }
         
         return cell
@@ -268,18 +277,25 @@ final class CreateTaskViewController: UIViewController,
         tableView.deselectRow(at: indexPath, animated: false)
         
         if indexPath.row == 0 {
-            present(CategorySelectionViewController(), animated: true)
+            let setCategoryVC = CategorySelectionViewController(viewModel: CategorySelectionViewModel())
+            
+            setCategoryVC.onCategorySelected = { [weak self] category in
+                guard let self else { return }
+                self.viewModel.taskCategory = category
+                self.updateCreateTaskButtonstate()
+            }
+            
+            present(setCategoryVC, animated: true)
         } else {
             let setSheduleVC = ScheduleSelectionViewController(viewModel: CreateTaskViewModel(taskType: viewModel.taskType))
-            present(setSheduleVC, animated: true)
             
             setSheduleVC.setSchedule = { [weak self] someDays in
                 guard let self else { return }
                 self.viewModel.taskSchedule = someDays
-                let description = "\(self.viewModel.convertWeekdays(weekdays: someDays))"
-                self.viewModel.selectionDescription = description
                 self.updateCreateTaskButtonstate()
             }
+            
+            present(setSheduleVC, animated: true)
         }
     }
     

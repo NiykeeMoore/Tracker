@@ -5,7 +5,7 @@
 //  Created by Niykee Moore on 03.11.2024.
 //
 
-import Foundation
+import UIKit
 import CoreData
 
 final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
@@ -53,28 +53,59 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         return fetchedResultsController?.fetchedObjects?.count ?? 0
     }
     
-    func fetchAllCategories() -> [TrackerCategory]? {
-        guard let allFetchedTrackers = StoreManager.shared.trackerStore.fetchAllTrackers() else { return [] }
+    func fetchAllCategories() -> [TrackerCategory] {
+        try? fetchedResultsController?.performFetch()
+        guard let allFetchedCategories = fetchedResultsController?.fetchedObjects else { return [] }
         
-        return fetchedResultsController?.fetchedObjects?.map { category in
-            TrackerCategory(title: category.title ?? "",
-                            tasks: allFetchedTrackers)
-            
-        } ?? []
+        let allCategories = allFetchedCategories.map {
+            TrackerCategory(title: $0.title ?? "", tasks: ($0.tracker?.allObjects as! [CDTracker]).map { cdTracker in
+                Tracker(id: cdTracker.id ?? UUID(),
+                        name: cdTracker.name ?? "",
+                        color: UIColor(hex: cdTracker.color ?? "") ?? .clear,
+                        emoji: cdTracker.emoji ?? "",
+                        schedule: cdTracker.schedule as? [Weekdays] ?? [])
+            })
+        }
+        
+        return allCategories
+    }
+    
+    func fetchCategoriesOnDate(date: Date) -> [TrackerCategory] {
+        guard let dayOfWeek = getDayOfWeek(from: date) else { return [] }
+        
+        let allCategories = fetchAllCategories()
+        
+        let filteredCategories = allCategories.compactMap { category in
+            let filteredTasks = category.tasks.filter { task in
+                task.schedule?.contains(dayOfWeek) == true
+            }
+            return filteredTasks.isEmpty ? nil : TrackerCategory(title: category.title, tasks: filteredTasks)
+        }
+        return filteredCategories
     }
     
     func addTrackerToCategory(toCategory categoryTitle: String, tracker: Tracker) {
-        guard let category = fetchOrCreateCategory(withTitle: categoryTitle) else { return }
+        guard let category = createOrFetchCategory(withTitle: categoryTitle) else { return }
         
-        let convertedTracker = convertToCDObject(from: tracker)
-        category.addToTracker(convertedTracker)
+        let convertedTracker = fetchCDTracker(by: tracker)
+        convertedTracker.map { category.addToTracker($0) }
         
         coreData.saveContext()
     }
     
+    func fetchAllCategoriesName() -> [String] {
+        try? fetchedResultsController?.performFetch()
+        return fetchAllCategories().map { $0.title }
+    }
+    
+    func createCategory(name newCategory: String) {
+        guard let _ = createOrFetchCategory(withTitle: newCategory) else { return }
+    }
+    
     // MARK: - Private Helper Methods
     
-    private func fetchOrCreateCategory(withTitle title: String) -> CDTrackerCategory? {
+    private func createOrFetchCategory(withTitle title: String) -> CDTrackerCategory? {
+        try? fetchedResultsController?.performFetch()
         if let categories = fetchedResultsController?.fetchedObjects,
            let existingCategory = categories.first(where: { $0.title == title }) {
             return existingCategory
@@ -109,5 +140,13 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             return existingTracker
         }
         return nil
+    }
+    
+    private func getDayOfWeek(from date: Date) -> Weekdays? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEEE"
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        let dayString = dateFormatter.string(from: date).capitalized
+        return Weekdays(rawValue: dayString)
     }
 }

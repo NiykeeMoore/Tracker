@@ -48,7 +48,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 9
         layout.sectionInsetReference = .fromContentInset
-        layout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 0, right: 0)
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 0)
         return layout
     }()
     
@@ -112,7 +112,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             taskDatePicker.widthAnchor.constraint(equalToConstant: 97),
             taskDatePicker.heightAnchor.constraint(equalToConstant: 34),
             
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -154,7 +154,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.numberOfItems(in: section)
+        let categories = viewModel.fetchTasksForDate(viewModel.selectedDay)
+        return categories[section].tasks.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -162,8 +163,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TaskCell.reuseIdentifier, for: indexPath) as? TaskCell
         else { return UICollectionViewCell() }
         
-        let tasksForSelectedDay = viewModel.fetchTasksForDate(viewModel.selectedDay)
-        let task = tasksForSelectedDay[indexPath.item]
+        let categories = viewModel.fetchTasksForDate(viewModel.selectedDay)
+        let task = categories[indexPath.section].tasks[indexPath.item]
         
         let isCompleted = viewModel.isTaskCompleted(for: task, on: viewModel.selectedDay)
         cell.updateButtonImage(isCompleted: isCompleted)
@@ -192,7 +193,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionView.trackerHeaderIdentifier, for: indexPath) as! SectionHeaderCollectionView
-        guard let fetchedHeaders = viewModel.fetchAllCategories() else { return UICollectionReusableView() }
+        let fetchedHeaders = viewModel.fetchTasksForDate(viewModel.selectedDay.onlyDate)
         header.createHeader(with: fetchedHeaders[indexPath.section].title)
         return header
     }
@@ -200,7 +201,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     // MARK: - UICollectionViewDelegateFlowLayout
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        if viewModel.hasTasksForToday(in: section) {
+        if viewModel.hasTasksForToday() {
             activePlaceholderImage(isActive: false)
             return CGSize(width: collectionView.bounds.width, height: 18)
         } else {
