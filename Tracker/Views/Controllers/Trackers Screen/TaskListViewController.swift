@@ -315,11 +315,19 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             return UIMenu(children: [
                 UIAction(title: titlePinButton) { [weak self] _ in
                     guard let self else { return }
-                    userDefaults.isPinned(trackerId: task.id) ? userDefaults.removePinnedTracker(id: task.id) : userDefaults.addPinnedTracker(id: task.id)
+                    if userDefaults.isPinned(trackerId: task.id) {
+                        userDefaults.removePinnedTracker(id: task.id)
+                        AppMetrica.reportEvent(name: "TrackerUnpinned", parameters: ["trackerId": task.id.uuidString])
+                    } else {
+                        userDefaults.addPinnedTracker(id: task.id)
+                        AppMetrica.reportEvent(name: "TrackerPinned", parameters: ["trackerId": task.id.uuidString])
+                    }
+                    
                     self.setPlaceholder(type: .taskList, isActive: self.viewModel.hasTasksForToday())
                 },
                 UIAction(title: ContextMenu.edit.rawValue) { [weak self] _ in
                     guard let self else { return }
+                    AppMetrica.reportEvent(name: "EditTrackerTapped", parameters: ["trackerId": task.id.uuidString])
                     let viewModel = CreateTaskViewModel(taskType: .underEditing)
                     
                     let editVC = CreateTaskViewController(viewModel: viewModel, editingTask: task,
@@ -334,11 +342,15 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                 },
                 UIAction(title: ContextMenu.delete.rawValue, attributes: [.destructive]) { [weak self] _ in
                     guard let self else { return }
+                    AppMetrica.reportEvent(name: "DeleteTrackerAttempt", parameters: ["trackerId": task.id.uuidString])
                     let buttonDelete = AlertButtonModel(title: "Удалить", style: .destructive) { _ in
+                        AppMetrica.reportEvent(name: "DeleteTrackerSuccess", parameters: ["trackerId": task.id.uuidString])
                         StoreManager.shared.trackerStore.remove(tracker: task)
                         self.setPlaceholder(type: Placeholder.taskList, isActive: self.viewModel.hasTasksForToday())
                     }
-                    let buttonCancel = AlertButtonModel(title: "Отмена", style: .cancel, handler: nil)
+                    let buttonCancel = AlertButtonModel(title: "Отмена", style: .cancel) { _ in
+                        AppMetrica.reportEvent(name: "DeleteTrackerCanceled", parameters: ["trackerId": task.id.uuidString])
+                    }
                     
                     let model = AlertModel(title: "", message: "Уверены что хотите удалить трекер?",
                                            preferredStyle: .actionSheet,
@@ -391,6 +403,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     // MARK: - Actions
     
     @objc private func buttonCreateTracker() {
+        AppMetrica.reportEvent(name: "AddTrackerTapped", parameters: ["screen": "Trackers"])
         let typeSelectionVC = TypeSelectionViewController()
         
         typeSelectionVC.onTaskCreated = { [weak self] in
@@ -417,6 +430,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     }
     
     @objc private func openFilterViewController() {
+        AppMetrica.reportEvent(name: "FilterButtonTapped", parameters: ["screen": "Trackers"])
         let filterVC = FilterViewController(viewModel: viewModel)
         
         filterVC.onFilterSelected = { [weak self] in
