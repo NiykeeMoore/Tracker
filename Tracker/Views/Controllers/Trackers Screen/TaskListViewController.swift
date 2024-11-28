@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AppMetricaCore
 
 final class TaskListViewController: UIViewController, UISearchBarDelegate,
                                     UICollectionViewDelegateFlowLayout, UICollectionViewDataSource  {
@@ -254,6 +255,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             guard let self = self else { return }
             self.activePlaceholderImage(isActive: self.viewModel.fetchTasksForDate(viewModel.selectedDay).isEmpty)
         }
+        AppMetrica.reportEvent(name: "DateChanged", parameters: ["selectedDate": sender.date.description])
         viewModel.selectedDay = sender.date
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AppMetricaCore
 
 final class TaskListViewModel {
     
@@ -81,10 +82,12 @@ final class TaskListViewModel {
     // MARK: - Private Helper Methods
     
     private func markTaskAsCompleted(_ task: Tracker, on date: Date) {
+        AppMetrica.reportEvent(name: "TrackerComplete", parameters: ["trackerId": task.id.uuidString])
         trackerRecordStore.addRecordForTracker(for: task, on: date)
     }
     
     private func unmarkTaskAsCompleted(_ task: Tracker, on date: Date) {
+        AppMetrica.reportEvent(name: "TrackerUncomplete", parameters: ["trackerId": task.id.uuidString])
         trackerRecordStore.removeRecordForTracker(for: task, on: date)
     }
 }
