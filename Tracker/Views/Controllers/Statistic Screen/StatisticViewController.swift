@@ -197,7 +197,7 @@ final class StatisticViewController: UIViewController {
             let prevDate = sortedDates[i - 1]
             let currentDate = sortedDates[i]
             
-            if Calendar.current.isDate(currentDate, inSameDayAs: prevDate.addingTimeInterval(86400)) {
+            if Calendar.current.isDate(prevDate, equalTo: currentDate, toGranularity: .day) {
                 currentStreak += 1
             } else {
                 longestStreak = max(longestStreak, currentStreak)
@@ -215,7 +215,8 @@ final class StatisticViewController: UIViewController {
         
         for (_, dailyRecords) in groupedByDay {
             let uniqueTrackers = Set(dailyRecords.map { $0.id })
-            if uniqueTrackers.count == allTrackers.count {
+            let allTrackerIDs = Set(allTrackers.map { $0.id })
+            if uniqueTrackers.count == allTrackerIDs.count {
                 perfectDays += 1
             }
         }

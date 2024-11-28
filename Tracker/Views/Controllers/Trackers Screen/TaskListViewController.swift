@@ -9,10 +9,13 @@ import UIKit
 import AppMetricaCore
 
 final class TaskListViewController: UIViewController, UISearchBarDelegate,
-                                    UICollectionViewDelegateFlowLayout, UICollectionViewDataSource  {
+                                    UICollectionViewDelegateFlowLayout, UICollectionViewDataSource,
+                                    AlertPresenterDelegate {
     //MARK: - Properties
     
     private let viewModel: TaskListViewModel
+    private let userDefaults = UserDefaultsSettings.shared
+    private lazy var alertPresenter = AlertPresenter()
     
     private lazy var taskDatePicker: UIDatePicker = {
         let datePicker = UIDatePicker()
@@ -82,12 +85,15 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         configureUI()
         configureSearchBar()
         configureConstraints()
+        userDefaults.loadPinnedTrackers()
         
         viewModel.onDataGetChanged = { [weak self] in
             DispatchQueue.main.async {
                 self?.collectionView.reloadData()
             }
         }
+        
+        alertPresenter.delegate = self
     }
     
     // MARK: - UI Setup
@@ -171,6 +177,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         let isCompleted = viewModel.isTaskCompleted(for: task, on: viewModel.selectedDay)
         cell.updateButtonImage(isCompleted: isCompleted)
         
+        cell.updatePinStatus(isPinned: userDefaults.isPinned(trackerId: task.id))
+        
         let completedDaysCount = viewModel.completedDaysCount(for: task.id)
         cell.updateDayCountLabel(with: completedDaysCount)
         cell.configure(with: task)
@@ -215,6 +223,61 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let cellWidth = collectionView.bounds.width / 2 - 20
         return CGSize(width: cellWidth, height: 148)
+    }
+    
+    // MARK: - UICollectionViewDelegate
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(actionProvider: { _ in
+            let categories = self.viewModel.fetchTasksForDate(self.viewModel.selectedDay.onlyDate)
+            let task = categories[indexPath.section].tasks[indexPath.item]
+            let taskCategory = categories[indexPath.section].title
+            let completedDays = self.viewModel.completedDaysCount(for: task.id)
+            
+            let titlePinButton = !self.userDefaults.isPinned(trackerId: task.id) ? ContextMenu.attach.rawValue : ContextMenu.deattach.rawValue
+            
+            return UIMenu(children: [
+                UIAction(title: titlePinButton) { [weak self] _ in
+                    guard let self else { return }
+                    userDefaults.isPinned(trackerId: task.id) ? userDefaults.removePinnedTracker(id: task.id) : userDefaults.addPinnedTracker(id: task.id)
+                    self.activePlaceholderImage(isActive: self.viewModel.hasTasksForToday())
+                },
+                UIAction(title: ContextMenu.edit.rawValue) { [weak self] _ in
+                    guard let self else { return }
+                    let viewModel = CreateTaskViewModel(taskType: .underEditing)
+                    
+                    let editVC = CreateTaskViewController(viewModel: viewModel, editingTask: task,
+                                                          completedDays: completedDays, taskCategory: taskCategory)
+                    
+                    editVC.onTaskSaved = { [weak self] in
+                        guard let self else { return }
+                        self.activePlaceholderImage(isActive: self.viewModel.hasTasksForToday())
+                    }
+                    
+                    self.present(editVC, animated: true)
+                },
+                UIAction(title: ContextMenu.delete.rawValue, attributes: [.destructive]) { [weak self] _ in
+                    guard let self else { return }
+                    let buttonDelete = AlertButtonModel(title: "Удалить", style: .destructive) { _ in
+                        StoreManager.shared.trackerStore.remove(tracker: task)
+                        self.activePlaceholderImage(isActive: self.viewModel.hasTasksForToday())
+                    }
+                    let buttonCancel = AlertButtonModel(title: "Отмена", style: .cancel, handler: nil)
+                    
+                    let model = AlertModel(title: "", message: "Уверены что хотите удалить трекер?",
+                                           preferredStyle: .actionSheet,
+                                           primaryButton: buttonDelete, secondaryButton: buttonCancel)
+                    
+                    self.alertPresenter.alertPresent(alertModel: model)
+                },
+            ])
+        })
+    }
+    
+    // MARK: - Public Helper Methods
+    
+    func sendAlert(alert: UIAlertController) {
+        self.present(alert, animated: true, completion: nil)
     }
     
     // MARK: - Private Helper Methods

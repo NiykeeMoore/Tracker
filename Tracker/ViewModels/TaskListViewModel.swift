@@ -20,10 +20,13 @@ final class TaskListViewModel {
     var onSelectedDayChanged: (() -> Void)?
     var onDataGetChanged: (() -> Void)?
     var onCompletedDaysCountUpdated: (() -> Void)?
+    //    var selectedFilter: Filters = .allTasks
     
     private var currentDate: Date {
         return Date()
     }
+    //    private var filteredCategories: [TrackerCategory] = []
+    
     private let trackerStore = StoreManager.shared.trackerStore
     private let trackerRecordStore = StoreManager.shared.recordStore
     private let trackerCategoryStore = StoreManager.shared.categoryStore
@@ -43,12 +46,57 @@ final class TaskListViewModel {
         return trackerCategoryStore.fetchAllCategories()
     }
     
+    //    func applyFilter() {
+    //        let allCategoriesOnSelectedDay = trackerCategoryStore.fetchCategoriesOnDate(date: selectedDay)
+    //
+    //        switch selectedFilter {
+    //        case .allTasks:
+    //            filteredCategories = allCategoriesOnSelectedDay
+    //        case .tasksForToday:
+    //            selectedDay = Date()
+    //            filteredCategories = fetchTasksForDate(selectedDay)
+    //        case .completed:
+    //            filteredCategories = allCategoriesOnSelectedDay.map { category in
+    //                TrackerCategory(
+    //                    title: category.title,
+    //                    tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
+    //                )
+    //            }.filter { !$0.tasks.isEmpty }
+    //        case .incomplete:
+    //            filteredCategories = allCategoriesOnSelectedDay.map { category in
+    //                TrackerCategory(
+    //                    title: category.title,
+    //                    tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
+    //                )
+    //            }.filter { !$0.tasks.isEmpty }
+    //        }
+    //        onDataGetChanged?()
+    //    }
+    //
+    //    func fetchFilteredTasks() -> [TrackerCategory] {
+    //        applyFilter()
+    //        return filteredCategories
+    //    }
+    
     /*
      fixme:
      - Нерегулярная задача будет отображаться в день создания каждый день недели
      */
     func fetchTasksForDate(_ date: Date) -> [TrackerCategory] {
-        return trackerCategoryStore.fetchCategoriesOnDate(date: date)
+        var fetchedCategoriesForToday = trackerCategoryStore.fetchCategoriesOnDate(date: date)
+        
+        let pinnedTrackerList = fetchedCategoriesForToday.flatMap { $0.tasks.filter { UserDefaultsSettings.shared.isPinned(trackerId: $0.id) } }
+        
+        fetchedCategoriesForToday = fetchedCategoriesForToday.map { category in
+            let filteredTasks = category.tasks.filter { !UserDefaultsSettings.shared.isPinned(trackerId: $0.id) }
+            return TrackerCategory(title: category.title, tasks: filteredTasks)
+        }.filter { !$0.tasks.isEmpty }
+        
+        if !pinnedTrackerList.isEmpty {
+            fetchedCategoriesForToday.insert(TrackerCategory(title: "Закрепленные", tasks: pinnedTrackerList), at: 0)
+        }
+        
+        return fetchedCategoriesForToday
     }
     
     func hasTasksForToday() -> Bool {

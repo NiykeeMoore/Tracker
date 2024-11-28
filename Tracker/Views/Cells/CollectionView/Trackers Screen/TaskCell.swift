@@ -38,6 +38,14 @@ final class TaskCell: UICollectionViewCell {
         return item
     }()
     
+    private lazy var pin: UIButton = {
+        let item = UIButton()
+        item.setImage(UIImage(systemName: "pin.fill"), for: .disabled)
+        item.clipsToBounds = true
+        item.imageView?.tintColor = .ccBlack
+        return item
+    }()
+    
     private lazy var quantityView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
@@ -65,7 +73,7 @@ final class TaskCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         [quantityView, themeColorContainer, emoji, titleTracker,
-         dayCountLabel, buttonDone].forEach {
+         pin, dayCountLabel, buttonDone].forEach {
             contentView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -83,6 +91,12 @@ final class TaskCell: UICollectionViewCell {
             titleTracker.heightAnchor.constraint(equalToConstant: 34),
             titleTracker.topAnchor.constraint(equalTo: emoji.bottomAnchor, constant: 12),
             titleTracker.leadingAnchor.constraint(equalTo: themeColorContainer.leadingAnchor, constant: 12),
+            titleTracker.trailingAnchor.constraint(equalTo: themeColorContainer.trailingAnchor, constant: -4),
+            
+            pin.topAnchor.constraint(equalTo: themeColorContainer.topAnchor, constant: 12),
+            pin.trailingAnchor.constraint(equalTo: themeColorContainer.trailingAnchor, constant: -4),
+            pin.leadingAnchor.constraint(equalTo: emoji.trailingAnchor, constant: 100),
+            pin.bottomAnchor.constraint(equalTo: titleTracker.topAnchor, constant: 4),
             
             quantityView.heightAnchor.constraint(equalToConstant: 58),
             quantityView.topAnchor.constraint(equalTo: themeColorContainer.bottomAnchor),
@@ -123,6 +137,10 @@ final class TaskCell: UICollectionViewCell {
         let formatString: String = NSLocalizedString("days_сount", comment: "")
         let resultString: String = String.localizedStringWithFormat(formatString, count)
         dayCountLabel.text = resultString
+    }
+    
+    func updatePinStatus(isPinned: Bool) {
+        pin.isHidden = !isPinned
     }
     
     // MARK: - Actions

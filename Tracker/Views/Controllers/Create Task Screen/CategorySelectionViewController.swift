@@ -63,8 +63,9 @@ final class CategorySelectionViewController: UIViewController,
     
     // MARK: - Initialization
     
-    init(viewModel: CategorySelectionViewModel) {
+    init(viewModel: CategorySelectionViewModel, selectedCategory: String?) {
         self.viewModel = viewModel
+        self.viewModel.selectedCategory = selectedCategory
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -155,6 +156,12 @@ final class CategorySelectionViewController: UIViewController,
         
         cell.showOrHideSeparator(isHidden: indexPath.row == viewModel.categoriesList.count - 1)
         cell.renderCell(with: viewModel.categoriesList[indexPath.row])
+        
+        if let selectedCategory = viewModel.selectedCategory {
+            if selectedCategory == cell.getTitle() {
+                cell.makeSelected()
+            }
+        }
         
         return cell
     }

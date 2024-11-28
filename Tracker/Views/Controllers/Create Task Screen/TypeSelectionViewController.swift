@@ -87,9 +87,9 @@ final class TypeSelectionViewController: UIViewController {
     }
     
     private func openCreateTaskViewController(viewModel: CreateTaskViewModel) {
-        let createTaskVC = CreateTaskViewController(viewModel: viewModel)
+        let createTaskVC = CreateTaskViewController(viewModel: viewModel, editingTask: nil, completedDays: nil, taskCategory: nil)
         
-        createTaskVC.onTaskCreated = { [weak self] in
+        createTaskVC.onTaskSaved = { [weak self] in
             guard let self else { return }
             self.onTaskCreated?()
         }
