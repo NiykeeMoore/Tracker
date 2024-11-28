@@ -22,3 +22,5 @@
 "title_main_screen" = "Trackers";
 "search_placeholder" = "Search";
 "placeholder_title" = "What are we going to track?";
+"nothing_found" = "Nothing was found";
+"filter_button" = "Filters";

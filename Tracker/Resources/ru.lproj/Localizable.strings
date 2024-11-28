@@ -21,3 +21,5 @@
 
 "search_placeholder" = "Поиск";
 "placeholder_title" = "Что будем отслеживать?";
+"nothing_found" = "Ничего не найдено";
+"filter_button" = "Фильтры";

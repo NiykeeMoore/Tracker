@@ -20,12 +20,12 @@ final class TaskListViewModel {
     var onSelectedDayChanged: (() -> Void)?
     var onDataGetChanged: (() -> Void)?
     var onCompletedDaysCountUpdated: (() -> Void)?
-    //    var selectedFilter: Filters = .allTasks
+    var selectedFilter: Filters = .allTasks
     
     private var currentDate: Date {
         return Date()
     }
-    //    private var filteredCategories: [TrackerCategory] = []
+    var categories: [TrackerCategory] = []
     
     private let trackerStore = StoreManager.shared.trackerStore
     private let trackerRecordStore = StoreManager.shared.recordStore
@@ -46,37 +46,37 @@ final class TaskListViewModel {
         return trackerCategoryStore.fetchAllCategories()
     }
     
-    //    func applyFilter() {
-    //        let allCategoriesOnSelectedDay = trackerCategoryStore.fetchCategoriesOnDate(date: selectedDay)
-    //
-    //        switch selectedFilter {
-    //        case .allTasks:
-    //            filteredCategories = allCategoriesOnSelectedDay
-    //        case .tasksForToday:
-    //            selectedDay = Date()
-    //            filteredCategories = fetchTasksForDate(selectedDay)
-    //        case .completed:
-    //            filteredCategories = allCategoriesOnSelectedDay.map { category in
-    //                TrackerCategory(
-    //                    title: category.title,
-    //                    tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
-    //                )
-    //            }.filter { !$0.tasks.isEmpty }
-    //        case .incomplete:
-    //            filteredCategories = allCategoriesOnSelectedDay.map { category in
-    //                TrackerCategory(
-    //                    title: category.title,
-    //                    tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
-    //                )
-    //            }.filter { !$0.tasks.isEmpty }
-    //        }
-    //        onDataGetChanged?()
-    //    }
-    //
-    //    func fetchFilteredTasks() -> [TrackerCategory] {
-    //        applyFilter()
-    //        return filteredCategories
-    //    }
+        func applyFilter() {
+            let allCategoriesOnSelectedDay = trackerCategoryStore.fetchCategoriesOnDate(date: selectedDay)
+    
+            switch selectedFilter {
+            case .allTasks:
+                categories = allCategoriesOnSelectedDay
+            case .tasksForToday:
+                selectedDay = Date()
+                categories = fetchTasksForDate(selectedDay)
+            case .completed:
+                categories = allCategoriesOnSelectedDay.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
+                    )
+                }.filter { !$0.tasks.isEmpty }
+            case .incomplete:
+                categories = allCategoriesOnSelectedDay.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
+                    )
+                }.filter { !$0.tasks.isEmpty }
+            }
+            onDataGetChanged?()
+        }
+    
+        func fetchFilteredTasks() -> [TrackerCategory] {
+            applyFilter()
+            return categories
+        }
     
     /*
      fixme:
@@ -120,11 +120,11 @@ final class TaskListViewModel {
     }
     
     func numberOfItems(in section: Int) -> Int {
-        return fetchTasksForDate(selectedDay.onlyDate).count
+        return categories[section].tasks.count
     }
     
     func numberOfSections() -> Int {
-        return fetchTasksForDate(selectedDay.onlyDate).count
+        return categories.count
     }
     
     // MARK: - Private Helper Methods
