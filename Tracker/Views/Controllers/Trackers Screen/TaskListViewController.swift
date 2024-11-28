@@ -9,9 +9,11 @@ import UIKit
 import AppMetricaCore
 
 final class TaskListViewController: UIViewController, UISearchBarDelegate,
-                                    UICollectionViewDelegateFlowLayout, UICollectionViewDataSource,
+                                    UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource,
                                     AlertPresenterDelegate,
-                                    UISearchResultsUpdating {
+                                    UISearchResultsUpdating,
+                                    UIContextMenuInteractionDelegate {
+    
     //MARK: - Properties
     
     private let viewModel: TaskListViewModel
@@ -301,19 +303,20 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     
     // MARK: - UICollectionViewDelegate
     
-    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(actionProvider: { _ in
+            guard let indexPath = indexPaths.first else { return UIMenu() }
+            
             let task = self.viewModel.categories[indexPath.section].tasks[indexPath.item]
             let taskCategory = self.viewModel.categories[indexPath.section].title
             let completedDays = self.viewModel.completedDaysCount(for: task.id)
-            
             let titlePinButton = !self.userDefaults.isPinned(trackerId: task.id) ? ContextMenu.attach.rawValue : ContextMenu.deattach.rawValue
             
             return UIMenu(children: [
                 UIAction(title: titlePinButton) { [weak self] _ in
                     guard let self else { return }
                     userDefaults.isPinned(trackerId: task.id) ? userDefaults.removePinnedTracker(id: task.id) : userDefaults.addPinnedTracker(id: task.id)
-                    self.setPlaceholder(type: Placeholder.taskList, isActive: self.viewModel.hasTasksForToday())
+                    self.setPlaceholder(type: .taskList, isActive: self.viewModel.hasTasksForToday())
                 },
                 UIAction(title: ContextMenu.edit.rawValue) { [weak self] _ in
                     guard let self else { return }
@@ -345,6 +348,21 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                 },
             ])
         })
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfiguration configuration: UIContextMenuConfiguration, highlightPreviewForItemAt indexPath: IndexPath) -> UITargetedPreview? {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? TaskCell else {
+            return nil
+        }
+        
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        
+        return UITargetedPreview(view: cell.themeColorContainer, parameters: parameters)
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
     }
     
     // MARK: - Public Helper Methods

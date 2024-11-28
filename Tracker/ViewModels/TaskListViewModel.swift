@@ -42,41 +42,35 @@ final class TaskListViewModel {
     }
     // MARK: - Public Helper Methods
     
-    func fetchAllCategories() -> [TrackerCategory]?{
-        return trackerCategoryStore.fetchAllCategories()
+    func applyFilter() {
+        switch selectedFilter {
+        case .allTasks:
+            categories = fetchTasksForDate(selectedDay)
+        case .tasksForToday:
+            selectedDay = Date()
+            categories = fetchTasksForDate(selectedDay)
+        case .completed:
+            categories = fetchTasksForDate(selectedDay).map { category in
+                TrackerCategory(
+                    title: category.title,
+                    tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
+                )
+            }.filter { !$0.tasks.isEmpty }
+        case .incomplete:
+            categories = fetchTasksForDate(selectedDay).map { category in
+                TrackerCategory(
+                    title: category.title,
+                    tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
+                )
+            }.filter { !$0.tasks.isEmpty }
+        }
+        onDataGetChanged?()
     }
     
-        func applyFilter() {
-            let allCategoriesOnSelectedDay = trackerCategoryStore.fetchCategoriesOnDate(date: selectedDay)
-    
-            switch selectedFilter {
-            case .allTasks:
-                categories = allCategoriesOnSelectedDay
-            case .tasksForToday:
-                selectedDay = Date()
-                categories = fetchTasksForDate(selectedDay)
-            case .completed:
-                categories = allCategoriesOnSelectedDay.map { category in
-                    TrackerCategory(
-                        title: category.title,
-                        tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
-                    )
-                }.filter { !$0.tasks.isEmpty }
-            case .incomplete:
-                categories = allCategoriesOnSelectedDay.map { category in
-                    TrackerCategory(
-                        title: category.title,
-                        tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
-                    )
-                }.filter { !$0.tasks.isEmpty }
-            }
-            onDataGetChanged?()
-        }
-    
-        func fetchFilteredTasks() -> [TrackerCategory] {
-            applyFilter()
-            return categories
-        }
+    func fetchFilteredTasks() -> [TrackerCategory] {
+        applyFilter()
+        return categories
+    }
     
     /*
      fixme:
@@ -95,7 +89,7 @@ final class TaskListViewModel {
         if !pinnedTrackerList.isEmpty {
             fetchedCategoriesForToday.insert(TrackerCategory(title: "Закрепленные", tasks: pinnedTrackerList), at: 0)
         }
-        
+        categories = fetchedCategoriesForToday
         return fetchedCategoriesForToday
     }
     

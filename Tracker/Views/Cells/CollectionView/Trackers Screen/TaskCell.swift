@@ -5,6 +5,7 @@
 //  Created by Niykee Moore on 09.10.2024.
 //
 
+
 import UIKit
 
 final class TaskCell: UICollectionViewCell {
@@ -14,9 +15,7 @@ final class TaskCell: UICollectionViewCell {
     static let reuseIdentifier = "Tracker Cell"
     var onCompleteTaskButtonTapped: (() -> Void)?
     
-    private let viewModel = TaskListViewModel()
-    
-    private lazy var themeColorContainer: UIView = {
+    lazy var themeColorContainer: UIView = {
         let item = UIView()
         item.layer.cornerRadius = 16
         item.clipsToBounds = true
@@ -40,9 +39,9 @@ final class TaskCell: UICollectionViewCell {
     
     private lazy var pin: UIButton = {
         let item = UIButton()
-        item.setImage(UIImage(systemName: "pin.fill"), for: .disabled)
+        item.setImage(UIImage(systemName: "pin.fill"), for: .normal)
         item.clipsToBounds = true
-        item.imageView?.tintColor = .ccBlack
+        item.imageView?.tintColor = .white
         return item
     }()
     
@@ -72,11 +71,37 @@ final class TaskCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        [quantityView, themeColorContainer, emoji, titleTracker,
-         pin, dayCountLabel, buttonDone].forEach {
+        setupUI()
+        setupConstraints()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - UI Setup
+    
+    private func setupUI() {
+        
+        [emoji, titleTracker, pin].forEach {
+            themeColorContainer.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        [dayCountLabel, buttonDone].forEach {
+            quantityView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        [themeColorContainer, quantityView].forEach {
             contentView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
+    }
+    
+    // MARK: - Constraints
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             themeColorContainer.heightAnchor.constraint(equalToConstant: 90),
             themeColorContainer.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -93,9 +118,10 @@ final class TaskCell: UICollectionViewCell {
             titleTracker.leadingAnchor.constraint(equalTo: themeColorContainer.leadingAnchor, constant: 12),
             titleTracker.trailingAnchor.constraint(equalTo: themeColorContainer.trailingAnchor, constant: -4),
             
+            pin.widthAnchor.constraint(equalToConstant: 24),
+            pin.heightAnchor.constraint(equalToConstant: 24),
             pin.topAnchor.constraint(equalTo: themeColorContainer.topAnchor, constant: 12),
             pin.trailingAnchor.constraint(equalTo: themeColorContainer.trailingAnchor, constant: -4),
-            pin.leadingAnchor.constraint(equalTo: emoji.trailingAnchor, constant: 100),
             pin.bottomAnchor.constraint(equalTo: titleTracker.topAnchor, constant: 4),
             
             quantityView.heightAnchor.constraint(equalToConstant: 58),
@@ -112,10 +138,6 @@ final class TaskCell: UICollectionViewCell {
             dayCountLabel.topAnchor.constraint(equalTo: quantityView.topAnchor, constant: 16),
             dayCountLabel.leadingAnchor.constraint(equalTo: quantityView.leadingAnchor, constant: 12)
         ])
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     // MARK: - Public Helper Methods
