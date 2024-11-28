@@ -1,0 +1,24 @@
+/*
+ Localizable.strings
+ Tracker
+ 
+ Created by Niykee Moore on 28.11.2024.
+ 
+ */
+
+// MARK: - Onboarding screen
+
+"title_first_screen" = "Track only what you want";
+"title_second_screen" = "even if it's not liters of water and yoga";
+"skip_button" = "That's the technology!";
+
+// MARK: - Tab Bar
+
+"trackers" = "Trackers";
+"statistics" = "Statistics";
+
+// MARK: - Main screen
+
+"title_main_screen" = "Trackers";
+"search_placeholder" = "Search";
+"placeholder_title" = "What are we going to track?";

@@ -38,7 +38,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     
     private lazy var placeholderLabel: UILabel = {
         let placeholderLabel = UILabel()
-        placeholderLabel.text = "Что будем отслеживать?"
+        placeholderLabel.text = NSLocalizedString("placeholder_title", comment: "")
         placeholderLabel.configureLabel(font: .boldSystemFont(ofSize: 12), textColor: .ccBlack, aligment: .center)
         return placeholderLabel
     }()
@@ -140,7 +140,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         searchController.searchBar.searchTextField.textColor = .ccBlack
         searchController.searchBar.tintColor = .ccBlack
         searchController.searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
-            string: "Поиск",
+            string: NSLocalizedString("search_placeholder", comment: ""),
             attributes: [NSAttributedString.Key.foregroundColor: UIColor.ccBlack]
         )
         navigationItem.hidesSearchBarWhenScrolling = false

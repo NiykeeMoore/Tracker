@@ -29,8 +29,8 @@ final class TabBarController: UITabBarController {
         tabBar.layer.borderWidth = 0.5
         tabBar.layer.borderColor = UIColor.ccGray.cgColor
         
-        let tasks = self.createNavigationTab(with: "Трекеры", icon: UIImage(systemName: "record.circle.fill")!, viewControler: TaskListViewController(viewModel: viewModel))
-        let statistics = self.createNavigationTab(with: "Статистика", icon: UIImage(systemName: "hare.fill")!, viewControler: StatisticViewController(viewModel: viewModel))
+        let tasks = self.createNavigationTab(with: NSLocalizedString("trackers", comment: ""), icon: UIImage(systemName: "record.circle.fill")!, viewControler: TaskListViewController(viewModel: viewModel))
+        let statistics = self.createNavigationTab(with: NSLocalizedString("statistics", comment: ""), icon: UIImage(systemName: "hare.fill")!, viewControler: StatisticViewController(viewModel: viewModel))
         
         setViewControllers([tasks, statistics], animated: true)
     }

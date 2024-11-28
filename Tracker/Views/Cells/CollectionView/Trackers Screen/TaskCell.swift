@@ -121,11 +121,9 @@ final class TaskCell: UICollectionViewCell {
     }
     
     func updateDayCountLabel(with count: Int) {
-        switch count {
-        case 1: dayCountLabel.text = "\(count) день"
-        case 2...4: dayCountLabel.text = "\(count) дня"
-        default: dayCountLabel.text = "\(count) дней"
-        }
+        let formatString: String = NSLocalizedString("days_сount", comment: "")
+        let resultString: String = String.localizedStringWithFormat(formatString, count)
+        dayCountLabel.text = resultString
     }
     
     // MARK: - Actions
