@@ -22,7 +22,7 @@ final class TabBarController: UITabBarController {
     // MARK: - Private Helper Methods
     
     private func configureTab() {
-        tabBar.backgroundColor = .white
+        tabBar.backgroundColor = .ccWhite
         tabBar.unselectedItemTintColor = .ccGray
         tabBar.tintColor = .systemBlue
         tabBar.clipsToBounds = true
@@ -41,7 +41,7 @@ final class TabBarController: UITabBarController {
         navigationBar.tabBarItem.title = title
         navigationBar.tabBarItem.image = image
         navigationBar.viewControllers.first?.navigationItem.title = title
-        navigationBar.setupNavigationBarColor(titleTextAttributes: .black, largeTitleTextAttributes: .black)
+        navigationBar.setupNavigationBarColor(titleTextAttributes: .ccBlack, largeTitleTextAttributes: .ccBlack)
         return navigationBar
     }
 }

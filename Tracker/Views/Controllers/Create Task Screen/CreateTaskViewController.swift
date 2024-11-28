@@ -162,7 +162,7 @@ final class CreateTaskViewController: UIViewController,
     // MARK: - UI Setup
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -412,7 +412,7 @@ final class CreateTaskViewController: UIViewController,
             button.applyCustomStyle(title: title,
                                     forState: .normal,
                                     titleFont: .boldSystemFont(ofSize: 16),
-                                    titleColor: .white,
+                                    titleColor: .ccWhite,
                                     titleColorState: .normal,
                                     backgroundColor: .ccGray,
                                     cornerRadius: 16)

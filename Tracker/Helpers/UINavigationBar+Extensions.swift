@@ -13,7 +13,7 @@ extension UINavigationController {
         let navigationBar = UINavigationController(rootViewController: viewController)
         
         navigationBar.tabBarItem.title = title
-        navigationBar.setupNavigationBarColor(titleTextAttributes: .white, largeTitleTextAttributes: .white)
+        navigationBar.setupNavigationBarColor(titleTextAttributes: .ccWhite, largeTitleTextAttributes: .ccWhite)
         
         return navigationBar
     }
@@ -22,7 +22,7 @@ extension UINavigationController {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         
-        appearance.backgroundColor = .white
+        appearance.backgroundColor = .ccWhite
         appearance.shadowColor = .clear
         
         appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor : cTitle]

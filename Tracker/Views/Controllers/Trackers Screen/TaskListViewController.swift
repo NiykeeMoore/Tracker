@@ -60,6 +60,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.allowsMultipleSelection = false
+        collectionView.backgroundColor = .clear
         return collectionView
     }()
     
@@ -92,7 +93,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     // MARK: - UI Setup
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: taskDatePicker)
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
                                                            style: .done,

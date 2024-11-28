@@ -54,7 +54,7 @@ final class CategorySelectionViewController: UIViewController,
     private lazy var createCategoryButton:  UIButton = {
         let button = UIButton()
         button.applyCustomStyle(title: "Добавить категорию", forState: .normal, titleFont: .boldSystemFont(ofSize: 16),
-                                titleColor: .white, titleColorState: .normal,
+                                titleColor: .ccWhite, titleColorState: .normal,
                                 backgroundColor: .ccBlack,
                                 cornerRadius: 16)
         button.addTarget(self, action: #selector(newCategoryButtonTapped), for: .touchUpInside)
@@ -76,7 +76,7 @@ final class CategorySelectionViewController: UIViewController,
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         viewModel.fetchCategories()
         
         configureUI()

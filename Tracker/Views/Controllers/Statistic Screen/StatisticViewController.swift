@@ -77,7 +77,7 @@ final class StatisticViewController: UIViewController {
     // MARK: - UI Setup
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
         

@@ -25,9 +25,8 @@ final class TaskCell: UICollectionViewCell {
     
     private lazy var emoji: UILabel = {
         let item = UILabel()
-        item.textColor = .white
         item.font = UIFont.systemFont(ofSize: 16)
-        item.backgroundColor = .white.withAlphaComponent(0.3)
+        item.backgroundColor = .ccWhite.withAlphaComponent(0.3)
         item.layer.cornerRadius = 12
         item.clipsToBounds = true
         return item
@@ -35,7 +34,7 @@ final class TaskCell: UICollectionViewCell {
     
     private lazy var titleTracker: UILabel = {
         let item = UILabel()
-        item.configureLabel(font: .systemFont(ofSize: 17), textColor: .white, aligment: nil)
+        item.configureLabel(font: .systemFont(ofSize: 17), textColor: .ccBlack, aligment: nil)
         return item
     }()
     
@@ -56,7 +55,7 @@ final class TaskCell: UICollectionViewCell {
         item.setImage(UIImage(systemName: "plus"), for: .normal)
         item.clipsToBounds = true
         item.layer.cornerRadius = 17
-        item.imageView?.tintColor = .white
+        item.imageView?.tintColor = .ccWhite
         item.addTarget(self, action: #selector(buttonDoneTapped), for: .touchUpInside)
         return item
     }()
