@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AppMetricaCore
 
 final class TaskListViewModel {
     
@@ -19,10 +20,13 @@ final class TaskListViewModel {
     var onSelectedDayChanged: (() -> Void)?
     var onDataGetChanged: (() -> Void)?
     var onCompletedDaysCountUpdated: (() -> Void)?
+    var selectedFilter: Filters = .allTasks
     
     private var currentDate: Date {
         return Date()
     }
+    var categories: [TrackerCategory] = []
+    
     private let trackerStore = StoreManager.shared.trackerStore
     private let trackerRecordStore = StoreManager.shared.recordStore
     private let trackerCategoryStore = StoreManager.shared.categoryStore
@@ -38,8 +42,34 @@ final class TaskListViewModel {
     }
     // MARK: - Public Helper Methods
     
-    func fetchAllCategories() -> [TrackerCategory]?{
-        return trackerCategoryStore.fetchAllCategories()
+    func applyFilter() {
+        switch selectedFilter {
+        case .allTasks:
+            categories = fetchTasksForDate(selectedDay)
+        case .tasksForToday:
+            selectedDay = Date()
+            categories = fetchTasksForDate(selectedDay)
+        case .completed:
+            categories = fetchTasksForDate(selectedDay).map { category in
+                TrackerCategory(
+                    title: category.title,
+                    tasks: category.tasks.filter { isTaskCompleted(for: $0, on: selectedDay) }
+                )
+            }.filter { !$0.tasks.isEmpty }
+        case .incomplete:
+            categories = fetchTasksForDate(selectedDay).map { category in
+                TrackerCategory(
+                    title: category.title,
+                    tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
+                )
+            }.filter { !$0.tasks.isEmpty }
+        }
+        onDataGetChanged?()
+    }
+    
+    func fetchFilteredTasks() -> [TrackerCategory] {
+        applyFilter()
+        return categories
     }
     
     /*
@@ -47,7 +77,20 @@ final class TaskListViewModel {
      - Нерегулярная задача будет отображаться в день создания каждый день недели
      */
     func fetchTasksForDate(_ date: Date) -> [TrackerCategory] {
-        return trackerCategoryStore.fetchCategoriesOnDate(date: date)
+        var fetchedCategoriesForToday = trackerCategoryStore.fetchCategoriesOnDate(date: date)
+        
+        let pinnedTrackerList = fetchedCategoriesForToday.flatMap { $0.tasks.filter { UserDefaultsSettings.shared.isPinned(trackerId: $0.id) } }
+        
+        fetchedCategoriesForToday = fetchedCategoriesForToday.map { category in
+            let filteredTasks = category.tasks.filter { !UserDefaultsSettings.shared.isPinned(trackerId: $0.id) }
+            return TrackerCategory(title: category.title, tasks: filteredTasks)
+        }.filter { !$0.tasks.isEmpty }
+        
+        if !pinnedTrackerList.isEmpty {
+            fetchedCategoriesForToday.insert(TrackerCategory(title: "Закрепленные", tasks: pinnedTrackerList), at: 0)
+        }
+        categories = fetchedCategoriesForToday
+        return fetchedCategoriesForToday
     }
     
     func hasTasksForToday() -> Bool {
@@ -71,20 +114,22 @@ final class TaskListViewModel {
     }
     
     func numberOfItems(in section: Int) -> Int {
-        return fetchTasksForDate(selectedDay.onlyDate).count
+        return categories[section].tasks.count
     }
     
     func numberOfSections() -> Int {
-        return fetchTasksForDate(selectedDay.onlyDate).count
+        return categories.count
     }
     
     // MARK: - Private Helper Methods
     
     private func markTaskAsCompleted(_ task: Tracker, on date: Date) {
+        AppMetrica.reportEvent(name: "TrackerComplete", parameters: ["trackerId": task.id.uuidString])
         trackerRecordStore.addRecordForTracker(for: task, on: date)
     }
     
     private func unmarkTaskAsCompleted(_ task: Tracker, on date: Date) {
+        AppMetrica.reportEvent(name: "TrackerUncomplete", parameters: ["trackerId": task.id.uuidString])
         trackerRecordStore.removeRecordForTracker(for: task, on: date)
     }
 }

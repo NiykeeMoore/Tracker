@@ -48,7 +48,7 @@ final class TypeSelectionViewController: UIViewController {
     // MARK: - UI Setup
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         [titleViewController, selectionStackView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
@@ -80,16 +80,16 @@ final class TypeSelectionViewController: UIViewController {
         let button = UIButton()
         button.applyCustomStyle(title: title, forState: .normal,
                                 titleFont: .boldSystemFont(ofSize: 16),
-                                titleColor: .white, titleColorState: .normal,
+                                titleColor: .ccWhite, titleColorState: .normal,
                                 backgroundColor: .ccBlack, cornerRadius: 16)
         button.addTarget(self, action: selector, for: .touchUpInside)
         return button
     }
     
     private func openCreateTaskViewController(viewModel: CreateTaskViewModel) {
-        let createTaskVC = CreateTaskViewController(viewModel: viewModel)
+        let createTaskVC = CreateTaskViewController(viewModel: viewModel, editingTask: nil, completedDays: nil, taskCategory: nil)
         
-        createTaskVC.onTaskCreated = { [weak self] in
+        createTaskVC.onTaskSaved = { [weak self] in
             guard let self else { return }
             self.onTaskCreated?()
         }

@@ -18,7 +18,7 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
-        label.configureLabel(font: .boldSystemFont(ofSize: 16), textColor: .black, aligment: .center)
+        label.configureLabel(font: .boldSystemFont(ofSize: 16), textColor: .ccBlack, aligment: .center)
         label.text = "Расписание"
         return label
     }()
@@ -39,8 +39,8 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
         let button = UIButton()
         button.applyCustomStyle(
             title: "Готово", forState: .normal, titleFont: .boldSystemFont(ofSize: 16),
-            titleColor: .white, titleColorState: .normal,
-            backgroundColor: .black,
+            titleColor: .ccWhite, titleColorState: .normal,
+            backgroundColor: .ccBlack,
             cornerRadius: 16)
         button.addTarget(self, action: #selector(saveSelectedDays), for: .touchUpInside)
         return button
@@ -61,7 +61,7 @@ final class ScheduleSelectionViewController: UIViewController, UITableViewDelega
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         configureUI()
         configureConstraints()
     }

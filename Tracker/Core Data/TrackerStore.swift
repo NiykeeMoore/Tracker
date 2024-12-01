@@ -51,7 +51,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     func createTracker(entity: Tracker, category: String) {
         
-        let cdTracker = CDTracker(context: coreData.context)
+        let cdTracker = fetchCDTracker(by: entity) ?? CDTracker(context: coreData.context)
         cdTracker.id = entity.id
         cdTracker.name = entity.name
         cdTracker.emoji = entity.emoji
@@ -90,6 +90,22 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
         
         return trackersForDate
+    }
+    
+    func remove(tracker: Tracker) {
+        guard let selectedTask = fetchCDTracker(by: tracker) else { return }
+        coreData.context.delete(selectedTask)
+        coreData.saveContext()
+    }
+    
+    private func fetchCDTracker(by tracker: Tracker) -> CDTracker? {
+        let fetchRequest: NSFetchRequest<CDTracker> = CDTracker.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        if let existingTracker = try? coreData.context.fetch(fetchRequest).first {
+            return existingTracker
+        }
+        return nil
     }
     
     // MARK: - NSFetchedResultsControllerDelegate
