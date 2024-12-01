@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -49,32 +49,6 @@
 		D5471A5CE1B7768C82BD9CC5 /* Pods-Tracker.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tracker.debug.xcconfig"; path = "Target Support Files/Pods-Tracker/Pods-Tracker.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4BCEAEAA2CA5766A004C4D46 /* Exceptions for "Tracker" folder in "Tracker" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 4BCEAE972CA57669004C4D46 /* Tracker */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		4B6C191F2CF8F5E90027BD84 /* TrackerTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = TrackerTests;
-			sourceTree = "<group>";
-		};
-		4BCEAE9A2CA57669004C4D46 /* Tracker */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				4BCEAEAA2CA5766A004C4D46 /* Exceptions for "Tracker" folder in "Tracker" target */,
-			);
-			path = Tracker;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		4B6C191B2CF8F5E90027BD84 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -99,6 +73,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4B6C191F2CF8F5E90027BD84 /* TrackerTests */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = TrackerTests;
+			sourceTree = "<group>";
+		};
 		4BCEAE8F2CA57669004C4D46 = {
 			isa = PBXGroup;
 			children = (
@@ -117,6 +98,13 @@
 				4B6C191E2CF8F5E90027BD84 /* TrackerTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4BCEAE9A2CA57669004C4D46 /* Tracker */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Tracker;
 			sourceTree = "<group>";
 		};
 		91A2F04E5EDA1C4DD6C1A715 /* Pods */ = {
@@ -208,6 +196,7 @@
 				};
 			};
 			buildConfigurationList = 4BCEAE932CA57669004C4D46 /* Build configuration list for PBXProject "Tracker" */;
+			compatibilityVersion = "Xcode 15.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -220,7 +209,6 @@
 			packageReferences = (
 				4B6C19152CF8F56A0027BD84 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 4BCEAE992CA57669004C4D46 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
