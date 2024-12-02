@@ -21,8 +21,8 @@ final class OnboardingViewController: UIViewController {
     private lazy var skipOnboardingButton: UIButton = {
         let button = UIButton(type: .system)
         button.applyCustomStyle(title: NSLocalizedString("skip_button", comment: ""), forState: .normal,
-                                titleFont: .systemFont(ofSize: 16), titleColor: .ccWhite, titleColorState: .normal,
-                                backgroundColor: .ccBlack,
+                                titleFont: .systemFont(ofSize: 16), titleColor: .ccAlwaysWhite, titleColorState: .normal,
+                                backgroundColor: .ccAlwaysBlack,
                                 cornerRadius: 16)
         button.addTarget(self, action: #selector(finishOnboarding), for: .touchUpInside)
         return button
@@ -32,7 +32,7 @@ final class OnboardingViewController: UIViewController {
         let control = UIPageControl()
         control.translatesAutoresizingMaskIntoConstraints = false
         control.currentPage = 0
-        control.currentPageIndicatorTintColor = .ccBlack
+        control.currentPageIndicatorTintColor = .ccAlwaysBlack
         control.pageIndicatorTintColor = .ccGray
         return control
     }()

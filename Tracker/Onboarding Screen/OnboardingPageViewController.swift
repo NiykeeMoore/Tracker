@@ -19,7 +19,7 @@ final class OnboardingPageViewController: UIViewController {
     
     private lazy var descriptionLabel: UILabel = {
         let descriptionLabel = UILabel()
-        descriptionLabel.configureLabel(font: .boldSystemFont(ofSize: 32), textColor: .ccBlack, aligment: .center)
+        descriptionLabel.configureLabel(font: .boldSystemFont(ofSize: 32), textColor: .ccAlwaysBlack, aligment: .center)
         descriptionLabel.text = descriptionText
         descriptionLabel.numberOfLines = 0
         return descriptionLabel
