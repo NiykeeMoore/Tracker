@@ -16,7 +16,7 @@ final class FilterViewController: UIViewController,
     
     private let viewModel: TaskListViewModel
     private let rowHeight: CGFloat = 75
-    private let numberOfRows = Filters.allCases.count
+    private let numberOfRows = Filters.allCases.count - 1
     private var tableViewHeightConstraint: NSLayoutConstraint?
     
     private lazy var titleViewController: UILabel = {
