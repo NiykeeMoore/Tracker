@@ -13,7 +13,7 @@ final class OnboardingPageViewController: UIViewController {
     
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: imageName))
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         return imageView
     }()
     

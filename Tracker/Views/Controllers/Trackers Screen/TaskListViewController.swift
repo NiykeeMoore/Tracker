@@ -97,6 +97,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             guard let self else { return }
             DispatchQueue.main.async {
                 self.collectionView.reloadData()
+                self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.categories.isEmpty)
             }
         }
         
@@ -265,8 +266,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                         userDefaults.addPinnedTracker(id: task.id)
                         AppMetrica.reportEvent(name: "TrackerPinned", parameters: ["trackerId": task.id.uuidString])
                     }
-                    
-                    self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
+                    self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.fetchFilteredTasks(searchText: nil).isEmpty)
                 },
                 UIAction(title: ContextMenu.edit.rawValue) { [weak self] _ in
                     guard let self else { return }
@@ -278,7 +278,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                     
                     editVC.onTaskSaved = { [weak self] in
                         guard let self else { return }
-                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
+                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.fetchFilteredTasks(searchText: nil).isEmpty)
                     }
                     
                     self.present(editVC, animated: true)
@@ -289,7 +289,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                     let buttonDelete = AlertButtonModel(title: "Удалить", style: .destructive) { _ in
                         AppMetrica.reportEvent(name: "DeleteTrackerSuccess", parameters: ["trackerId": task.id.uuidString])
                         StoreManager.shared.trackerStore.remove(tracker: task)
-                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
+                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.fetchFilteredTasks(searchText: nil).isEmpty)
                     }
                     let buttonCancel = AlertButtonModel(title: "Отмена", style: .cancel) { _ in
                         AppMetrica.reportEvent(name: "DeleteTrackerCanceled", parameters: ["trackerId": task.id.uuidString])

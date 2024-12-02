@@ -14,7 +14,7 @@ enum PlaceholderType {
     case statistic
 }
 
-class PlaceholderManager {
+final class PlaceholderManager {
     private var placeholderView: UIView?
     
     func configurePlaceholder(for view: UIView, type: PlaceholderType, isActive: Bool) {
