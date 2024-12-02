@@ -42,7 +42,7 @@ final class TaskListViewModel {
     }
     // MARK: - Public Helper Methods
     
-    func applyFilter() {
+    func applyFilter(searchText: String?) {
         switch selectedFilter {
         case .allTasks:
             categories = fetchTasksForDate(selectedDay)
@@ -63,12 +63,21 @@ final class TaskListViewModel {
                     tasks: category.tasks.filter { !isTaskCompleted(for: $0, on: selectedDay) }
                 )
             }.filter { !$0.tasks.isEmpty }
+            
+        case .onSearch:
+            guard let searchText else { return }
+            categories = fetchTasksForDate(selectedDay).map { category in
+                TrackerCategory(
+                    title: category.title,
+                    tasks: category.tasks.filter { $0.name.lowercased().contains(searchText) }
+                )
+            }.filter { !$0.tasks.isEmpty }
         }
         onDataGetChanged?()
     }
     
-    func fetchFilteredTasks() -> [TrackerCategory] {
-        applyFilter()
+    func fetchFilteredTasks(searchText: String?) -> [TrackerCategory] {
+        applyFilter(searchText: searchText)
         return categories
     }
     
@@ -90,11 +99,12 @@ final class TaskListViewModel {
             fetchedCategoriesForToday.insert(TrackerCategory(title: "Закрепленные", tasks: pinnedTrackerList), at: 0)
         }
         categories = fetchedCategoriesForToday
+        onDataGetChanged?()
         return fetchedCategoriesForToday
     }
     
     func hasTasksForToday() -> Bool {
-        return fetchTasksForDate(selectedDay.onlyDate).isEmpty == false
+        return categories.isEmpty == false
     }
     
     func isTaskCompleted(for task: Tracker, on date: Date) -> Bool {
@@ -111,14 +121,6 @@ final class TaskListViewModel {
     
     func completedDaysCount(for taskId: UUID) -> Int {
         return trackerRecordStore.countCompletedDays(for: taskId)
-    }
-    
-    func numberOfItems(in section: Int) -> Int {
-        return categories[section].tasks.count
-    }
-    
-    func numberOfSections() -> Int {
-        return categories.count
     }
     
     // MARK: - Private Helper Methods

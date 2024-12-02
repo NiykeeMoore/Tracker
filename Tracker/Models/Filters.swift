@@ -12,4 +12,5 @@ enum Filters: String, CaseIterable {
     case tasksForToday = "Трекеры на сегодня"
     case completed = "Завершенные"
     case incomplete = "Не завершенные"
+    case onSearch = "Поиск"
 }

@@ -19,12 +19,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     private let viewModel: TaskListViewModel
     private let userDefaults = UserDefaultsSettings.shared
     private lazy var alertPresenter = AlertPresenter()
-    private lazy var filteredTasks: [TrackerCategory] = []
-    
-    private enum Placeholder {
-        case taskList
-        case taskSearch
-    }
+    private lazy var placeholder = PlaceholderManager()
     
     private lazy var taskDatePicker: UIDatePicker = {
         let datePicker = UIDatePicker()
@@ -46,36 +41,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         searchController.searchBar.placeholder = NSLocalizedString("search_placeholder", comment: "")
         searchController.searchBar.delegate = self
         return searchController
-    }()
-    
-    private lazy var mainPlaceholderImage: UIImageView = {
-        let image = UIImage(named: "placeholderTrackerList")
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFill
-        return imageView
-    }()
-    
-    private lazy var mainPlaceholderLabel: UILabel = {
-        let placeholderLabel = UILabel()
-        placeholderLabel.text = NSLocalizedString("placeholder_title", comment: "")
-        placeholderLabel.configureLabel(font: .boldSystemFont(ofSize: 12), textColor: .ccBlack, aligment: .center)
-        return placeholderLabel
-    }()
-    
-    private lazy var searchPlaceholderImage: UIImageView = {
-        let image = UIImage(named: "placeholderSearchTrackers")
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFill
-        imageView.isHidden = true
-        return imageView
-    }()
-    
-    private lazy var searchPlaceholderLabel: UILabel = {
-        let placeholderLabel = UILabel()
-        placeholderLabel.text = NSLocalizedString("nothing_found", comment: "")
-        placeholderLabel.configureLabel(font: .boldSystemFont(ofSize: 12), textColor: .ccBlack, aligment: .center)
-        placeholderLabel.isHidden = true
-        return placeholderLabel
     }()
     
     private lazy var collectionViewLayout: UICollectionViewFlowLayout = {
@@ -126,13 +91,11 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         configureSearchBar()
         configureConstraints()
         userDefaults.loadPinnedTrackers()
-        viewModel.applyFilter()
+        placeholder.configurePlaceholder(for: view, type: .taskList, isActive: viewModel.fetchTasksForDate(viewModel.selectedDay).isEmpty)
         
         viewModel.onDataGetChanged = { [weak self] in
             guard let self else { return }
             DispatchQueue.main.async {
-                self.setPlaceholder(type: .taskList, isActive: self.viewModel.categories.isEmpty)
-                self.setPlaceholder(type: .taskSearch, isActive: self.filteredTasks.isEmpty)
                 self.collectionView.reloadData()
             }
         }
@@ -150,8 +113,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                                                            target: self,
                                                            action: #selector (buttonCreateTracker))
         navigationItem.searchController = searchController
-        [taskDatePicker, collectionView, mainPlaceholderImage, mainPlaceholderLabel,
-         searchPlaceholderImage, searchPlaceholderLabel, filterButton].forEach {
+        [taskDatePicker, collectionView, filterButton].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -169,26 +131,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            
-            mainPlaceholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            mainPlaceholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            mainPlaceholderImage.widthAnchor.constraint(equalToConstant: 80),
-            mainPlaceholderImage.heightAnchor.constraint(equalToConstant: 80),
-            
-            mainPlaceholderLabel.topAnchor.constraint(equalTo: mainPlaceholderImage.bottomAnchor, constant: 8),
-            mainPlaceholderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            mainPlaceholderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            mainPlaceholderLabel.heightAnchor.constraint(equalToConstant: 18),
-            
-            searchPlaceholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            searchPlaceholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            searchPlaceholderImage.widthAnchor.constraint(equalToConstant: 80),
-            searchPlaceholderImage.heightAnchor.constraint(equalToConstant: 80),
-            
-            searchPlaceholderLabel.topAnchor.constraint(equalTo: searchPlaceholderImage.bottomAnchor, constant: 8),
-            searchPlaceholderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            searchPlaceholderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            searchPlaceholderLabel.heightAnchor.constraint(equalToConstant: 18),
             
             filterButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 130),
             filterButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -130),
@@ -218,26 +160,29 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     // MARK: - UISearchResultsUpdating
     
     func updateSearchResults(for searchController: UISearchController) {
-        guard let searchText = searchController.searchBar.text else { return }
+        guard let searchText = searchController.searchBar.text?.lowercased() else { return }
         
         if !searchText.isEmpty {
-            filteredTasks = viewModel.categories.map { category in
-                let filteredTasks = category.tasks.filter { $0.name.lowercased().contains(searchText.lowercased()) }
-                return TrackerCategory(title: category.title, tasks: filteredTasks)
-            }.filter { !$0.tasks.isEmpty }
-            viewModel.categories = filteredTasks
-            print(filteredTasks)
-            setPlaceholder(type: Placeholder.taskSearch, isActive: !filteredTasks.isEmpty)
-            
+            viewModel.selectedFilter = .onSearch
+            viewModel.applyFilter(searchText: searchText)
         } else {
-            setPlaceholder(type: Placeholder.taskList, isActive: viewModel.fetchFilteredTasks().isEmpty)
+            viewModel.selectedFilter = .allTasks
+            viewModel.applyFilter(searchText: nil)
         }
+        
+        if viewModel.selectedFilter == .onSearch {
+            placeholder.configurePlaceholder(for: view, type: .taskSearch, isActive: viewModel.categories.isEmpty)
+        } else {
+            placeholder.configurePlaceholder(for: view, type: .taskList, isActive: viewModel.fetchFilteredTasks(searchText: nil).isEmpty)
+        }
+        
+        viewModel.onDataGetChanged?()
     }
     
     // MARK: - UICollectionViewDataSource
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return viewModel.numberOfSections()
+        return viewModel.categories.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -288,10 +233,8 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         if viewModel.hasTasksForToday() {
-            setPlaceholder(type: Placeholder.taskList, isActive: false)
             return CGSize(width: collectionView.bounds.width, height: 18)
         } else {
-            setPlaceholder(type: Placeholder.taskList, isActive: true)
             return .zero
         }
     }
@@ -323,7 +266,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                         AppMetrica.reportEvent(name: "TrackerPinned", parameters: ["trackerId": task.id.uuidString])
                     }
                     
-                    self.setPlaceholder(type: .taskList, isActive: self.viewModel.hasTasksForToday())
+                    self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
                 },
                 UIAction(title: ContextMenu.edit.rawValue) { [weak self] _ in
                     guard let self else { return }
@@ -335,7 +278,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                     
                     editVC.onTaskSaved = { [weak self] in
                         guard let self else { return }
-                        self.setPlaceholder(type: Placeholder.taskList, isActive: self.viewModel.hasTasksForToday())
+                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
                     }
                     
                     self.present(editVC, animated: true)
@@ -346,7 +289,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
                     let buttonDelete = AlertButtonModel(title: "Удалить", style: .destructive) { _ in
                         AppMetrica.reportEvent(name: "DeleteTrackerSuccess", parameters: ["trackerId": task.id.uuidString])
                         StoreManager.shared.trackerStore.remove(tracker: task)
-                        self.setPlaceholder(type: Placeholder.taskList, isActive: self.viewModel.hasTasksForToday())
+                        self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.hasTasksForToday())
                     }
                     let buttonCancel = AlertButtonModel(title: "Отмена", style: .cancel) { _ in
                         AppMetrica.reportEvent(name: "DeleteTrackerCanceled", parameters: ["trackerId": task.id.uuidString])
@@ -383,23 +326,6 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         self.present(alert, animated: true, completion: nil)
     }
     
-    // MARK: - Private Helper Methods
-    
-    //FIXME: переписать метод нормально
-    
-    private func setPlaceholder(type: Placeholder, isActive: Bool) {
-        switch type {
-        case .taskList:
-            collectionView.isHidden = isActive
-            mainPlaceholderImage.isHidden = !isActive
-            mainPlaceholderLabel.isHidden = !isActive
-        case .taskSearch:
-            searchPlaceholderImage.isHidden = isActive
-            searchPlaceholderLabel.isHidden = isActive
-        }
-        collectionView.reloadData()
-    }
-    
     // MARK: - Actions
     
     @objc private func buttonCreateTracker() {
@@ -408,7 +334,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         
         typeSelectionVC.onTaskCreated = { [weak self] in
             guard let self else { return }
-            self.setPlaceholder(type: Placeholder.taskList, isActive: self.viewModel.fetchFilteredTasks().isEmpty)
+            self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.fetchFilteredTasks(searchText: nil).isEmpty)
         }
         
         typeSelectionVC.onClose = { [weak self] in
@@ -423,7 +349,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
         
         viewModel.onSelectedDayChanged = { [weak self] in
             guard let self = self else { return }
-            self.setPlaceholder(type: .taskList, isActive: self.viewModel.fetchTasksForDate(viewModel.selectedDay).isEmpty)
+            self.placeholder.configurePlaceholder(for: self.view, type: .taskList, isActive: self.viewModel.fetchTasksForDate(viewModel.selectedDay).isEmpty)
         }
         AppMetrica.reportEvent(name: "DateChanged", parameters: ["selectedDate": sender.date.description])
         viewModel.selectedDay = sender.date
@@ -438,7 +364,7 @@ final class TaskListViewController: UIViewController, UISearchBarDelegate,
             if viewModel.selectedFilter == .tasksForToday {
                 taskDatePicker.date = Date()
             }
-            self.viewModel.applyFilter()
+            self.viewModel.applyFilter(searchText: nil)
         }
         present(filterVC, animated: true)
     }

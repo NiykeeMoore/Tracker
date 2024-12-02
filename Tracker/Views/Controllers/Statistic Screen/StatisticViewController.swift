@@ -15,20 +15,7 @@ final class StatisticViewController: UIViewController {
     private let trackerRecordStore = StoreManager.shared.recordStore
     private let trackerStore = StoreManager.shared.trackerStore
     private var statistics: [Statistic] = []
-    
-    private lazy var placeholderImage: UIImageView = {
-        let image = UIImage(named: "placeholderStatisticList")
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFill
-        return imageView
-    }()
-    
-    private lazy var placeholderLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Анализировать пока нечего"
-        label.configureLabel(font: .boldSystemFont(ofSize: 12), textColor: .ccBlack, aligment: .center)
-        return label
-    }()
+    private let placeholder = PlaceholderManager()
     
     private lazy var statiscticsCardsStackView: UIStackView = {
         let stackView = UIStackView()
@@ -62,10 +49,10 @@ final class StatisticViewController: UIViewController {
         configureUI()
         configureConstraints()
         loadStatistics()
-        placeholderIfNeeded()
         
         viewModel.onCompletedDaysCountUpdated = { [weak self] in
-            self?.reloadStatisticsStack()
+            guard let self else { return }
+            self.reloadStatisticsStack()
         }
     }
     
@@ -84,7 +71,7 @@ final class StatisticViewController: UIViewController {
         statiscticsCardsStackView.isLayoutMarginsRelativeArrangement = true
         statiscticsCardsStackView.layoutMargins = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         
-        [placeholderImage, placeholderLabel, statiscticsCardsStackView].forEach {
+        [statiscticsCardsStackView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -132,16 +119,6 @@ final class StatisticViewController: UIViewController {
     
     private func configureConstraints() {
         NSLayoutConstraint.activate([
-            placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            placeholderImage.widthAnchor.constraint(equalToConstant: 80),
-            placeholderImage.heightAnchor.constraint(equalToConstant: 80),
-            
-            placeholderLabel.topAnchor.constraint(equalTo: placeholderImage.bottomAnchor, constant: 8),
-            placeholderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            placeholderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            placeholderLabel.heightAnchor.constraint(equalToConstant: 18),
-            
             statiscticsCardsStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             statiscticsCardsStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             statiscticsCardsStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
@@ -149,13 +126,6 @@ final class StatisticViewController: UIViewController {
     }
     
     // MARK: - Private functions
-    
-    private func placeholderIfNeeded() {
-        let hasData = !statistics.isEmpty
-        placeholderImage.isHidden = hasData
-        placeholderLabel.isHidden = hasData
-        statiscticsCardsStackView.isHidden = !hasData
-    }
     
     private func loadStatistics() {
         guard let allTrackers = trackerStore.fetchAllTrackers() else { return }
@@ -166,6 +136,8 @@ final class StatisticViewController: UIViewController {
     private func calculateStatistics(records: [TrackerRecord], trackers: [Tracker]) {
         guard !records.isEmpty else {
             statistics = []
+            reloadStatisticsStack()
+            placeholder.configurePlaceholder(for: view, type: .statistic, isActive: statistics.isEmpty)
             return
         }
         
@@ -181,7 +153,8 @@ final class StatisticViewController: UIViewController {
             Statistic(value: "\(averageCompletion)", title: "Среднее значение"),
         ]
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.reloadStatisticsStack()
         }
     }
@@ -237,10 +210,14 @@ final class StatisticViewController: UIViewController {
             statiscticsCardsStackView.removeArrangedSubview(view)
             view.removeFromSuperview()
         }
-        
-        for statistic in statistics {
-            let view = createViewForStackView(with: statistic)
-            statiscticsCardsStackView.addArrangedSubview(view)
+        if !statistics.isEmpty {
+            placeholder.configurePlaceholder(for: view, type: .statistic, isActive: false)
+            for statistic in statistics {
+                let view = createViewForStackView(with: statistic)
+                statiscticsCardsStackView.addArrangedSubview(view)
+            }
+        } else {
+            placeholder.configurePlaceholder(for: view, type: .statistic, isActive: true)
         }
     }
 }

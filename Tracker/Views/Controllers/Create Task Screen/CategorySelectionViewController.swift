@@ -17,6 +17,7 @@ final class CategorySelectionViewController: UIViewController,
     private let viewModel: CategorySelectionViewModel
     private let rowHeight: CGFloat = 75
     private var tableViewHeightConstraint: NSLayoutConstraint?
+    private let placeholder = PlaceholderManager()
     
     private lazy var titleViewController: UILabel = {
         let label = UILabel()
@@ -35,20 +36,6 @@ final class CategorySelectionViewController: UIViewController,
         tableView.separatorColor = .clear
         tableView.register(CategorySelectionCell.self, forCellReuseIdentifier: CategorySelectionCell.reuseIdentifier)
         return tableView
-    }()
-    
-    private lazy var placeholderImage: UIImageView = {
-        let image = UIImage(named: "placeholderTrackerList")
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFill
-        return imageView
-    }()
-    
-    private lazy var placeholderLabel: UILabel = {
-        let placeholderLabel = UILabel()
-        placeholderLabel.text = "Привычки и события можно объединить по смыслу"
-        placeholderLabel.configureLabel(font: .boldSystemFont(ofSize: 12), textColor: .ccBlack, aligment: .center)
-        return placeholderLabel
     }()
     
     private lazy var createCategoryButton:  UIButton = {
@@ -83,13 +70,13 @@ final class CategorySelectionViewController: UIViewController,
         configureUI()
         configureConstraints()
         
-        activePlaceholderImage(isActive: viewModel.categoriesList.isEmpty)
+        placeholder.configurePlaceholder(for: view, type: .categoryList, isActive: viewModel.categoriesList.isEmpty)
         
         viewModel.onCategoriesListUpdated = { [weak self] in
             guard let self else { return }
             DispatchQueue.main.async {
-                self.activePlaceholderImage(isActive: self.viewModel.categoriesList.isEmpty)
                 self.categoriesTableView.reloadData()
+                self.updateTableViewHeight()
             }
         }
     }
@@ -102,8 +89,7 @@ final class CategorySelectionViewController: UIViewController,
     // MARK: - UI Setup
     
     private func configureUI() {
-        [titleViewController, placeholderImage,
-         placeholderLabel, categoriesTableView, createCategoryButton].forEach {
+        [titleViewController, categoriesTableView, createCategoryButton].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -115,16 +101,6 @@ final class CategorySelectionViewController: UIViewController,
         NSLayoutConstraint.activate([
             titleViewController.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleViewController.topAnchor.constraint(equalTo: view.topAnchor, constant: 35),
-            
-            placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            placeholderImage.widthAnchor.constraint(equalToConstant: 80),
-            placeholderImage.heightAnchor.constraint(equalToConstant: 80),
-            
-            placeholderLabel.topAnchor.constraint(equalTo: placeholderImage.bottomAnchor, constant: 8),
-            placeholderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            placeholderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            placeholderLabel.heightAnchor.constraint(equalToConstant: 18),
             
             categoriesTableView.topAnchor.constraint(equalTo: titleViewController.bottomAnchor, constant: 38),
             categoriesTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
@@ -188,19 +164,6 @@ final class CategorySelectionViewController: UIViewController,
     
     // MARK: - Private Helper Methods
     
-    private func activePlaceholderImage(isActive: Bool) {
-        if isActive {
-            categoriesTableView.isHidden = true
-            placeholderImage.isHidden = false
-            placeholderLabel.isHidden = false
-        } else {
-            categoriesTableView.isHidden = false
-            placeholderImage.isHidden = true
-            placeholderLabel.isHidden = true
-            updateTableViewHeight()
-        }
-    }
-    
     private func updateTableViewHeight() {
         tableViewHeightConstraint?.isActive = false
         
@@ -216,7 +179,7 @@ final class CategorySelectionViewController: UIViewController,
         
         createCategoryVC.onCategoryCreate = { [weak self] in
             guard let self else { return }
-            self.activePlaceholderImage(isActive: self.viewModel.categoriesList.isEmpty)
+            self.placeholder.configurePlaceholder(for: self.view, type: .categoryList, isActive: self.viewModel.categoriesList.isEmpty)
         }
         
         present(createCategoryVC, animated: true)
