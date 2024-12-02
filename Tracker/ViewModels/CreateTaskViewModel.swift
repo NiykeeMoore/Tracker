@@ -15,6 +15,8 @@ final class CreateTaskViewModel {
     let selectionButtonTitles: [String] = ["Категория", "Расписание"]
     
     var taskType: TaskType
+    var editingTask: Tracker?
+    var completedDays: Int?
     var taskCategory: String? {
         didSet {
             onCategoryChanged?(taskCategory)
@@ -75,20 +77,23 @@ final class CreateTaskViewModel {
         return taskSchedule
     }
     
-    func createTask() {
+    func saveTask() {
         guard isReadyToCreateTask(),
-              taskCategory != nil,
+              let taskCategory = taskCategory,
               let selectedColorIndex = selectedColorIndex,
               let selectedEmojiIndex = selectedEmojiIndex else { return }
         
-        let tracker = Tracker(id: UUID(),
-                              name: taskName,
-                              color: colorsInSection[selectedColorIndex],
-                              emoji: emojisInSection[selectedEmojiIndex],
-                              schedule: getTaskSchedule())
+        let trackerId = taskType == .underEditing ? (editingTask?.id ?? UUID()) : UUID()
         
-        StoreManager.shared.trackerStore.createTracker(entity: tracker,
-                                                       category: taskCategory ?? "Ошибка в получении категории")
+        let tracker = Tracker(
+            id: trackerId,
+            name: taskName,
+            color: colorsInSection[selectedColorIndex],
+            emoji: emojisInSection[selectedEmojiIndex],
+            schedule: getTaskSchedule()
+        )
+        
+        StoreManager.shared.trackerStore.createTracker(entity: tracker, category: taskCategory)
     }
     
     func isCreateButtonEnabled() -> Bool {

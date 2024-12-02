@@ -1,0 +1,25 @@
+/*
+ Localizable.strings
+ Tracker
+ 
+ Created by Niykee Moore on 28.11.2024.
+ 
+ */
+
+// MARK: - Onboarding screen
+
+"title_first_screen" = "Отслеживайте только то, что хотите";
+"title_second_screen" = "Даже если это не литры воды и йога";
+"skip_button" = "Вот это технологии!";
+
+// MARK: - Tab Bar
+
+"trackers" = "Трекеры";
+"statistics" = "Статистика";
+
+// MARK: - Main screen
+
+"search_placeholder" = "Поиск";
+"placeholder_title" = "Что будем отслеживать?";
+"nothing_found" = "Ничего не найдено";
+"filter_button" = "Фильтры";

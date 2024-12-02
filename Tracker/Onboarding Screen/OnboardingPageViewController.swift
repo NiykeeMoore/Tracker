@@ -13,13 +13,13 @@ final class OnboardingPageViewController: UIViewController {
     
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: imageName))
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         return imageView
     }()
     
     private lazy var descriptionLabel: UILabel = {
         let descriptionLabel = UILabel()
-        descriptionLabel.configureLabel(font: .boldSystemFont(ofSize: 32), textColor: .ccBlack, aligment: .center)
+        descriptionLabel.configureLabel(font: .boldSystemFont(ofSize: 32), textColor: .ccAlwaysBlack, aligment: .center)
         descriptionLabel.text = descriptionText
         descriptionLabel.numberOfLines = 0
         return descriptionLabel

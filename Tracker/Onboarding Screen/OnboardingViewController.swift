@@ -13,16 +13,16 @@ final class OnboardingViewController: UIViewController {
     private let viewModel = OnboardingViewModel()
     private var pageViewController: UIPageViewController!
     private let pages: [UIViewController] = [
-        OnboardingPageViewController(imageName: "onboardingBlue", description: "Отслеживайте только то, что хотите"),
-        OnboardingPageViewController(imageName: "onboardingRed", description: "Даже если это не литры воды и йога")
+        OnboardingPageViewController(imageName: "onboardingBlue", description: NSLocalizedString("title_first_screen", comment: "")),
+        OnboardingPageViewController(imageName: "onboardingRed", description: NSLocalizedString("title_second_screen", comment: ""))
     ]
     private var currentIndex = 0
     
     private lazy var skipOnboardingButton: UIButton = {
         let button = UIButton(type: .system)
-        button.applyCustomStyle(title: "Вот это технологии!", forState: .normal,
-                                titleFont: .systemFont(ofSize: 16), titleColor: .white, titleColorState: .normal,
-                                backgroundColor: .ccBlack,
+        button.applyCustomStyle(title: NSLocalizedString("skip_button", comment: ""), forState: .normal,
+                                titleFont: .systemFont(ofSize: 16), titleColor: .ccAlwaysWhite, titleColorState: .normal,
+                                backgroundColor: .ccAlwaysBlack,
                                 cornerRadius: 16)
         button.addTarget(self, action: #selector(finishOnboarding), for: .touchUpInside)
         return button
@@ -32,14 +32,14 @@ final class OnboardingViewController: UIViewController {
         let control = UIPageControl()
         control.translatesAutoresizingMaskIntoConstraints = false
         control.currentPage = 0
-        control.currentPageIndicatorTintColor = .ccBlack
+        control.currentPageIndicatorTintColor = .ccAlwaysBlack
         control.pageIndicatorTintColor = .ccGray
         return control
     }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         setupPageViewController()
         setupUI()
         setupConstraints()

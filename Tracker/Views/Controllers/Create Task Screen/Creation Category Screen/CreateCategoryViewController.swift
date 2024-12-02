@@ -53,7 +53,7 @@ final class CreateCategoryViewController: UIViewController,
     private lazy var buttonCreateCategory: UIButton = {
         let button = UIButton()
         button.applyCustomStyle(title: "Готово", forState: .normal,
-                                titleFont: .systemFont(ofSize: 16), titleColor: .white, titleColorState: .normal,
+                                titleFont: .systemFont(ofSize: 16), titleColor: .ccWhite, titleColorState: .normal,
                                 backgroundColor: .ccBlack,
                                 cornerRadius: 16)
         button.addTarget(self, action: #selector(saveNewCategory), for: .touchUpInside)
@@ -92,7 +92,7 @@ final class CreateCategoryViewController: UIViewController,
     // MARK: - UI Setup
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ccWhite
         
         [titleViewController, categoryNameField,
          categoryNameLengthWarning, buttonCreateCategory].forEach {
@@ -122,7 +122,7 @@ final class CreateCategoryViewController: UIViewController,
             
             buttonCreateCategory.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             buttonCreateCategory.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            buttonCreateCategory.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            buttonCreateCategory.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             buttonCreateCategory.heightAnchor.constraint(equalToConstant: 60)
         ])
         
